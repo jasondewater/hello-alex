@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://hello-alex.dev/schemas/alex.agents.json",
+  "title": "AlexAgentsSpec",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "metadata", "spec"],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "pattern": "^v\\d+\\.\\d+$"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "spec": {
+      "type": "object",
+      "required": ["pm", "dev", "qa"],
+      "additionalProperties": false,
+      "properties": {
+        "pm": { "$ref": "#/definitions/agentConfig" },
+        "dev": { "$ref": "#/definitions/devAgentConfig" },
+        "qa": {
+          "allOf": [
+            { "$ref": "#/definitions/agentConfig" },
+            {
+              "type": "object",
+              "properties": {
+                "browsers": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": ["chromium", "firefox", "webkit"]
+                  },
+                  "default": ["chromium"]
+                },
+                "headless": {
+                  "type": "boolean",
+                  "default": true
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "definitions": {
+    "agentConfig": {
+      "type": "object",
+      "required": ["model", "systemPrompt"],
+      "additionalProperties": false,
+      "properties": {
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "temperature": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.3
+        },
+        "systemPrompt": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "devAgentConfig": {
+      "allOf": [
+        { "$ref": "#/definitions/agentConfig" },
+        {
+          "type": "object",
+          "properties": {
+            "executor": {
+              "type": "string",
+              "enum": ["docker", "shell"],
+              "default": "docker"
+            },
+            "testCoverage": {
+              "type": "object",
+              "properties": {
+                "minimum": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

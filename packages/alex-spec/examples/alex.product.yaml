@@ -1,0 +1,35 @@
+schemaVersion: v0.1
+metadata:
+  name: Sample Product
+  version: 0.1.0
+  description: Example Hello Alex product spec
+spec:
+  auth:
+    providers:
+      - email-password
+      - google-oauth
+  entities:
+    - name: Task
+      description: A task item
+      fields:
+        - name: id
+          type: string
+          required: true
+        - name: title
+          type: string
+          required: true
+        - name: completed
+          type: boolean
+  flows:
+    - name: Create Task
+      trigger: api
+      steps:
+        - name: validate
+          description: Validate incoming payload
+        - name: persist
+          description: Store the task
+  backend:
+    adapter: supabase
+    config:
+      projectId: example
+      region: us-east-1

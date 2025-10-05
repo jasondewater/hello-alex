@@ -1,0 +1,23 @@
+{
+  "name": "@hello-alex/runtime",
+  "version": "0.1.0",
+  "description": "LangGraph orchestration runtime for Hello Alex",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist",
+    "test": "vitest run",
+    "dev": "vitest",
+    "lint": "echo 'No lint configured for @hello-alex/runtime'",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hello-alex/spec": "workspace:*",
+    "@langchain/langgraph": "^0.0.16",
+    "dockerode": "^4.0.0",
+    "nanoid": "^4.0.2"
+  }
+}

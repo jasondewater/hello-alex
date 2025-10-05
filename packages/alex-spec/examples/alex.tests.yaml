@@ -1,0 +1,17 @@
+schemaVersion: v0.1
+metadata:
+  name: Sample Tests
+spec:
+  e2e:
+    - name: User creates a task
+      description: Ensure task creation flow works
+      steps:
+        - action: Open the create task page
+          expectation: The page renders correctly
+        - action: Submit the task form
+          expectation: Task is visible in list
+  unit:
+    coverage:
+      minimum: 0.8
+      exclude:
+        - src/mocks/**

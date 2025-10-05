@@ -1,0 +1,24 @@
+schemaVersion: v0.1
+metadata:
+  name: Sample Agents
+spec:
+  pm:
+    model: gpt-4o
+    temperature: 0.2
+    systemPrompt: |
+      You are the Hello Alex PM.
+  dev:
+    model: gpt-4o
+    systemPrompt: |
+      You are the Hello Alex developer.
+    executor: docker
+    testCoverage:
+      minimum: 0.85
+  qa:
+    model: gpt-4o
+    systemPrompt: |
+      You are the Hello Alex QA engineer.
+    browsers:
+      - chromium
+      - firefox
+    headless: true
