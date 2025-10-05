@@ -1,0 +1,35 @@
+{
+  "name": "@hello-alex/monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hello Alex - Autonomous Development Framework",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jasondewater/hello-alex.git"
+  },
+  "author": "Jason DeWater",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yaml,yml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yaml,yml}\"",
+    "typecheck": "pnpm -r typecheck",
+    "clean": "pnpm -r clean && rm -rf node_modules",
+    "dev:cli": "pnpm --filter @hello-alex/cli dev",
+    "dev:runtime": "pnpm --filter @hello-alex/runtime dev",
+    "dev:spec": "pnpm --filter @hello-alex/spec dev"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "prettier": "^3.1.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "packageManager": "pnpm@8.15.0"
+}

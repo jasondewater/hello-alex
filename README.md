@@ -1,17 +1,273 @@
-# 🚀 Hello Alex - Autonomous Development Framework Starter Kit
+# 🚀 Hello Alex - Autonomous Development Framework
 
-**Welcome!** This starter kit will help you set up your own autonomous development system with AI agents in less than a day.
+**Ship faster. Build better. Let AI agents handle the grind.**
 
-**What You'll Get**:
-- **Alex** (Platform PM) - Claude 4.5 Sonnet managing your project
-- **Codex** (Developer) - GPT-5 writing code with tests
-- **Operator** (QA) - OpenAI agent validating features
-- **Platform Religion** - Standards that keep quality high
-- **Velocity** - Ship a month's worth of work per week
+Hello Alex is an **open-source autonomous development framework** that orchestrates AI agents (PM, Dev, QA) to turn product specifications into production-ready applications—with tests, validation, and clean code.
 
-**Cost**: ~$50-100/month  
-**Setup Time**: 3-4 hours  
-**Team Size**: Just you + AI agents
+## ✨ What is Hello Alex?
+
+Think "OpenAPI for autonomous development." You define your product in human-readable YAML specs (`alex.*.yaml`), and Hello Alex coordinates multi-agent workflows to:
+
+1. **Plan** → PM agent breaks down specs into tasks
+2. **Build** → Dev agent writes code with >80% test coverage
+3. **Validate** → QA agent runs E2E tests and operator validations
+4. **Deploy** → Clean, ejectable code ready for production
+
+**No vendor lock-in. No magic. Just a standard, automatable workflow.**
+
+---
+
+## 🎯 Core Principles
+
+1. **Spec-first**: `alex.*.yaml` files are your source of truth
+2. **Quality gates**: >80% test coverage, E2E validation mandatory
+3. **Safe execution**: Docker sandboxes, no credential leaks ever
+4. **Progressive adoption**: Start with `alex plan`, grow to full orchestration
+5. **Clean exit**: Export to Next.js/TypeScript at any time
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────┐
+│  alex.*.yaml Specs (Your Product Definition)    │
+└──────────────────┬──────────────────────────────┘
+                   │
+        ┌──────────▼────────────┐
+        │  @hello-alex/runtime  │
+        │   (LangGraph Flows)   │
+        └──────────┬────────────┘
+                   │
+    ┌──────────────┼──────────────┐
+    │              │              │
+┌───▼────┐   ┌────▼─────┐   ┌───▼────┐
+│   PM   │   │   Dev    │   │   QA   │
+│ Agent  │──▶│  Agent   │──▶│ Agent  │
+└────────┘   └──────────┘   └────────┘
+    │             │              │
+    │        ┌────▼─────┐        │
+    │        │ Executor │        │
+    │        │ (Docker) │        │
+    │        └──────────┘        │
+    │                            │
+    └────────────┬───────────────┘
+                 │
+            Clean Code
+        (Next.js + TypeScript)
+```
+
+---
+
+## 🚀 Quick Start
+
+### Install
+
+```bash
+npx @hello-alex/cli init
+```
+
+This scaffolds:
+- `alex.product.yaml` - Your product definition
+- `alex.agents.yaml` - Agent configuration
+- `alex.tests.yaml` - Test scenarios
+- `.env.example` - Secrets template
+- CI config with security gates
+
+### Define Your Product
+
+```yaml
+# alex.product.yaml
+schemaVersion: "1.0.0"
+kind: Product
+
+metadata:
+  name: my-app
+  version: "0.1.0"
+
+spec:
+  auth:
+    providers: [email-password, google-oauth]
+
+  entities:
+    - name: User
+      fields:
+        - name: email
+          type: string
+          required: true
+
+  flows:
+    - name: user-signup
+      steps:
+        - action: validate-email
+        - action: create-user
+        - action: send-welcome-email
+```
+
+### Run Orchestration
+
+```bash
+# Plan: Generate issues and tasks from spec
+alex plan
+
+# Build: Orchestrate PM→Dev→QA workflow
+alex dev
+
+# Test: Run E2E validation
+alex test
+
+# Deploy: Ship it!
+alex deploy
+```
+
+---
+
+## 📦 Packages
+
+| Package | Description | Status |
+|---------|-------------|--------|
+| `@hello-alex/cli` | Command-line interface | 🚧 v0.1 |
+| `@hello-alex/runtime` | LangGraph orchestration engine | 🚧 v0.1 |
+| `@hello-alex/spec` | JSON Schema for `alex.*.yaml` specs | 🚧 v0.1 |
+| `@hello-alex/adapters-firebase` | Firebase auth + CRUD adapter | 🚧 v0.1 |
+| `@hello-alex/adapters-supabase` | Supabase auth + CRUD adapter | 🚧 v0.1 |
+
+---
+
+## 🎓 Documentation
+
+- **[Architecture Decision Records (ADRs)](./docs/adr/)** - Why we made key design choices
+  - [ADR-001: Language & Runtime (TypeScript-first)](./docs/adr/ADR-001-language-runtime.md)
+  - [ADR-002: Spec Files & Schema Evolution (YAML + JSON Schema)](./docs/adr/ADR-002-spec-schema.md)
+  - [ADR-003: Executor Interface (Docker sandbox)](./docs/adr/ADR-003-executor-interface.md)
+  - [ADR-004: Release Channels (Canary/Beta/Stable)](./docs/adr/ADR-004-release-channels.md)
+  - [ADR-005: Security Posture (Zero plaintext secrets)](./docs/adr/ADR-005-security-posture.md)
+
+- **[Platform Religion](./PLATFORM_RELIGION_TEMPLATE.md)** - Quality standards (>80% coverage, no cowboys)
+- **[Good Morning Alex](./GOOD_MORNING_ALEX.md)** - Daily workflow for Alex (Platform PM)
+- **[Developer Vetting](./DEVELOPER_VETTING_TEMPLATE.md)** - How to onboard new devs
+- **[Operator Validation](./OPERATOR_PROMPT_TEMPLATE.md)** - QA agent instructions
+
+---
+
+## 🛠️ Development
+
+### Prerequisites
+
+- Node.js 20 LTS
+- pnpm 8+
+- Docker (for executors)
+
+### Setup
+
+```bash
+git clone https://github.com/jasondewater/hello-alex.git
+cd hello-alex
+pnpm install
+pnpm build
+```
+
+### Run Tests
+
+```bash
+pnpm test
+```
+
+### Local Development
+
+```bash
+# Develop CLI
+pnpm dev:cli
+
+# Develop runtime
+pnpm dev:runtime
+
+# Run example app
+cd examples/appointments
+alex dev
+```
+
+---
+
+## 🔒 Security
+
+**Zero plaintext secrets. Ever.**
+
+- ✅ Secrets in `.env` (gitignored)
+- ✅ gitleaks scans on every commit
+- ✅ OIDC for CI/CD (no long-lived tokens)
+- ✅ Docker sandboxes for code execution
+- ✅ Dependency scanning (Dependabot + Snyk)
+
+See [ADR-005: Security Posture](./docs/adr/ADR-005-security-posture.md) for details.
+
+---
+
+## 📊 Project Status
+
+**Current Version**: v0.1.0-canary (active development)
+
+**Sprint**: v0.1 "Standard Seed" (Oct 5-15, 2025)
+
+**Progress**: See [BACKLOG.md](./BACKLOG.md)
+
+**Release Channels**:
+- `canary` - Daily builds from `main`
+- `beta` - Weekly releases (Mondays)
+- `stable` - Bi-weekly production releases
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! See [CONTRIBUTING.md](./CONTRIBUTING.md) (coming soon).
+
+**Key areas needing help**:
+- Executor adapters (OpenHands, remote shells)
+- Backend adapters (Postgres, MongoDB, AWS)
+- Studio UI (Next.js visual builder)
+- Documentation and examples
+
+---
+
+## 📜 License
+
+**MIT** - See [LICENSE](./LICENSE)
+
+Open core. No vendor lock-in. Eject to clean code anytime.
+
+---
+
+## 🌟 Why Hello Alex?
+
+**For Solo Developers**:
+- Turn ideas into apps in days, not months
+- AI handles boilerplate, you focus on business logic
+- Sleep well with >80% test coverage built-in
+
+**For Small Teams**:
+- Standard workflow everyone understands
+- Specs = single source of truth
+- Onboard new devs in hours with templates
+
+**For Vibe Coders**:
+- Describe what you want, Alex orchestrates the build
+- No more context-switching between PM/Dev/QA roles
+- Ship quality code without the grind
+
+---
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/jasondewater/hello-alex/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/jasondewater/hello-alex/discussions)
+- **Twitter**: [@jasondewater](https://twitter.com/jasondewater)
+
+---
+
+**Built with ❤️ by Jason DeWater and the Hello Alex community.**
+
+**Let's ship faster. Together.** 🚀
 
 ---
 
