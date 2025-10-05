@@ -19,5 +19,8 @@
     "@langchain/langgraph": "^0.0.16",
     "dockerode": "^4.0.0",
     "nanoid": "^4.0.2"
+  },
+  "devDependencies": {
+    "@types/dockerode": "^3.3.16"
   }
 }

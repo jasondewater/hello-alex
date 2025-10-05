@@ -8,7 +8,12 @@ const __dirname = dirname(__filename);
 export default defineConfig({
   test: {
     environment: 'node',
-    globals: true
+    globals: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      reportsDirectory: resolve(__dirname, 'coverage')
+    }
   },
   resolve: {
     alias: {
