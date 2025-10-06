@@ -1,0 +1,14 @@
+schemaVersion: v0.1
+metadata:
+  name: Sample Policies
+spec:
+  code:
+    style:
+      - Use TypeScript strict mode
+    lintRules:
+      - eslint:recommended
+  security:
+    dependencies:
+      - npm audit weekly
+    restrictedFiles:
+      - secrets/**

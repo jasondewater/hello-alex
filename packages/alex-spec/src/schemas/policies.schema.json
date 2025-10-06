@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://hello-alex.dev/schemas/alex.policies.json",
+  "title": "AlexPoliciesSpec",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "metadata", "spec"],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "pattern": "^v\\d+\\.\\d+$"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "object",
+          "properties": {
+            "style": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "lintRules": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "security": {
+          "type": "object",
+          "properties": {
+            "dependencies": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "restrictedFiles": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
