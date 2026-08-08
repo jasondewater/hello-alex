@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050506">
+<meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<title>Ganzflicker Dream Lab</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main>
+  <section class="hero">
+    <h1>Ganzflicker Dream Lab</h1>
+    <p class="lede">Run pure Ganzflicker directly, or choose a programmed journey whose phases scale to the total time. Lucid-dream journeys pair one cue with waking intention, then replay it during estimated dream windows later in the session.</p>
+    <div class="private-note">Private experimental build v6. Settings and dream notes remain in this browser.</div>
+  </section>
+
+  <section class="quick-launch" aria-label="Quick start Pure Ganzflicker">
+    <div>
+      <div class="quick-kicker">One-tap direct mode</div>
+      <h2>Start Pure Ganzflicker</h2>
+      <p><strong>7.5 Hz red/black</strong>, continuous until you press STOP. The first button is visual-only. Use the second when you also want the 6 Hz theta binaural track.</p>
+    </div>
+    <div class="quick-actions">
+      <button id="quickPureButton" class="launch-now" type="button">START GANZFLICKER</button>
+      <button id="quickThetaButton" class="launch-theta" type="button">START + THETA AUDIO</button>
+      <div class="quick-note">Uses the current red intensity and duty-cycle settings.</div>
+    </div>
+  </section>
+
+  <section class="panel" id="programPanel">
+    <h2>1. Choose a mode</h2>
+    <div class="program-grid" id="programGrid">
+      <label class="program-card selected" data-program="pure">
+        <input type="radio" name="programCard" value="pure" checked>
+        <span class="program-tag">Direct mode</span>
+        <span class="program-name">Pure Ganzflicker</span>
+        <span class="program-desc">Continuous red/black Ganzflicker. No phases, dream cues, or forced transitions.</span>
+      </label>
+      <label class="program-card" data-program="hypnagogic">
+        <input type="radio" name="programCard" value="hypnagogic">
+        <span class="program-tag">Awake journey</span>
+        <span class="program-name">Hypnagogic Portal</span>
+        <span class="program-desc">Red arrival, two Ganzflicker passages, theta darkness, and integration.</span>
+      </label>
+      <label class="program-card" data-program="lucid">
+        <input type="radio" name="programCard" value="lucid">
+        <span class="program-tag">Sleep journey</span>
+        <span class="program-name">Lucid Dream Incubator</span>
+        <span class="program-desc">Intent conditioning, short induction, long dream field, cue windows, and return.</span>
+      </label>
+      <label class="program-card" data-program="wbtb">
+        <input type="radio" name="programCard" value="wbtb">
+        <span class="program-tag">Sleep journey</span>
+        <span class="program-name">Wake-Back-to-Bed</span>
+        <span class="program-desc">First sleep block, deliberate red reset, MILD-style re-entry, then concentrated cueing.</span>
+      </label>
+      <label class="program-card" data-program="beacon">
+        <input type="radio" name="programCard" value="beacon">
+        <span class="program-tag">Overnight journey</span>
+        <span class="program-name">All-Night Dream Beacon</span>
+        <span class="program-desc">Mostly black and quiet, with brief conditioned cues near estimated dream windows.</span>
+      </label>
+      <label class="program-card" data-program="redTheta">
+        <input type="radio" name="programCard" value="redTheta">
+        <span class="program-tag">No rapid flicker</span>
+        <span class="program-name">Red Theta Voyage</span>
+        <span class="program-desc">Steady and breathing red immersion with an alpha-to-theta-to-delta audio descent.</span>
+      </label>
+    </div>
+
+    <div class="journey-head">
+      <div class="field" id="programFallback">
+        <label class="title" for="journeySelect">Program selector</label>
+        <select id="journeySelect">
+          <option value="pure" selected>Pure Ganzflicker</option>
+          <option value="hypnagogic">Hypnagogic Portal</option>
+          <option value="lucid">Lucid Dream Incubator</option>
+          <option value="wbtb">Wake-Back-to-Bed Lucidity</option>
+          <option value="beacon">All-Night Dream Beacon</option>
+          <option value="redTheta">Red Theta Voyage</option>
+        </select>
+        <div class="help">This selector remains visible when a file preview blocks JavaScript. In a normal browser, use the cards above.</div>
+      </div>
+      <div class="field">
+        <label class="title" for="endBehavior">Run behavior</label>
+        <select id="endBehavior">
+          <option value="stop">Timed: stop after selected duration</option>
+          <option value="hold" selected>Continuous: hold the final phase until I stop</option>
+        </select>
+        <div class="mode-note">For Pure Ganzflicker, Continuous means there is no time limit.</div>
+      </div>
+    </div>
+    <div id="journeyCopy" class="journey-copy" style="margin-top:13px"></div>
+  </section>
+
+  <section class="panel">
+    <h2>2. Total time</h2>
+    <div class="grid">
+      <div class="field">
+        <label class="title" for="durationValue">Duration</label>
+        <div class="range-row">
+          <input id="durationValue" type="number" min="1" max="1440" step="1" value="60">
+          <select id="durationUnit" style="width:130px">
+            <option value="minutes">minutes</option>
+            <option value="hours">hours</option>
+          </select>
+        </div>
+        <div class="preset-row">
+          <button data-duration="20">20m</button>
+          <button data-duration="45">45m</button>
+          <button data-duration="60">1h</button>
+          <button data-duration="120">2h</button>
+          <button data-duration="240">4h</button>
+          <button data-duration="360">6h</button>
+          <button data-duration="480">8h</button>
+          <button id="continuousButton" type="button">∞ Until stop</button>
+        </div>
+      </div>
+      <div class="field">
+        <label class="title" for="previewLength">Preview</label>
+        <select id="previewLength">
+          <option value="90">90-second compressed preview</option>
+          <option value="180">3-minute compressed preview</option>
+          <option value="300">5-minute compressed preview</option>
+        </select>
+        <div class="help">Preview runs every phase and forces one dream cue so the full program can be tested before an overnight run.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="dreamCuePanel">
+    <h2>3. Dream cue</h2>
+    <div class="grid three">
+      <div class="field">
+        <label class="title" for="cycleLength">Estimated sleep cycle</label>
+        <div class="range-row">
+          <input id="cycleLength" type="range" min="70" max="120" step="5" value="90">
+          <output id="cycleOut">90 min</output>
+        </div>
+        <div class="help">The web app cannot detect REM. It places cue windows near the end of estimated cycles and makes later windows stronger.</div>
+      </div>
+      <div class="field">
+        <label class="title" for="cueStrength">Cue strength</label>
+        <div class="range-row">
+          <input id="cueStrength" type="range" min="1" max="5" step="1" value="3">
+          <output id="cueStrengthOut">3 / 5</output>
+        </div>
+        <div class="help">Controls the closed-eye red pulse, cue motif, and cue-window duration.</div>
+      </div>
+      <div class="field">
+        <label class="title" for="cueVolume">Cue volume</label>
+        <div class="range-row">
+          <input id="cueVolume" type="range" min="0.01" max="0.18" step="0.005" value="0.055">
+          <output id="cueVolumeOut">31%</output>
+        </div>
+        <div class="help">The repeated three-note motif is the conditioned cue. Use headphones for binaural audio.</div>
+      </div>
+      <div class="field full">
+        <label class="title" for="intentionText">Lucidity intention</label>
+        <input id="intentionText" type="text" value="When I hear this sound in a dream, I realize that I am dreaming.">
+        <label class="check" style="margin-top:10px">
+          <input id="voiceCue" type="checkbox" checked>
+          <span>Speak the intention during training, wake-back-to-bed, and once in each cue window.</span>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>4. Visual and audio character</h2>
+    <div class="grid three">
+      <div class="field">
+        <label class="title" for="visualIntensity">Red intensity</label>
+        <div class="range-row">
+          <input id="visualIntensity" type="range" min="10" max="100" step="1" value="72">
+          <output id="visualOut">72%</output>
+        </div>
+        <div class="help">This scales both steady red and closed-eye red cue pulses.</div>
+      </div>
+      <div class="field">
+        <label class="title" for="baseVolume">Background audio</label>
+        <div class="range-row">
+          <input id="baseVolume" type="range" min="0" max="0.16" step="0.005" value="0.045">
+          <output id="baseVolumeOut">28%</output>
+        </div>
+      </div>
+      <div class="field">
+        <label class="title" for="carrier">Binaural carrier</label>
+        <div class="range-row">
+          <input id="carrier" type="range" min="100" max="400" step="5" value="200">
+          <output id="carrierOut">200 Hz</output>
+        </div>
+      </div>
+      <div class="field">
+        <label class="title" for="audioProfile">Audio profile</label>
+        <select id="audioProfile">
+          <option value="mix">Binaural + noise</option>
+          <option value="binaural">Binaural only</option>
+          <option value="noise">Noise only</option>
+          <option value="silent" selected>Silent visual only</option>
+        </select>
+        <div class="help">Choose Silent visual only when you literally want nothing except Ganzflicker.</div>
+      </div>
+      <div class="field">
+        <label class="title" for="noiseType">Noise bed</label>
+        <select id="noiseType">
+          <option value="brown">Brown noise</option>
+          <option value="pink">Pink-ish noise</option>
+          <option value="off">No noise</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="title" for="flickerFrequency">Ganzflicker frequency</label>
+        <div class="range-row">
+          <input id="flickerFrequency" type="range" min="1" max="15" step="0.5" value="7.5">
+          <output id="flickerOut">7.5 Hz</output>
+        </div>
+      </div>
+      <div class="field">
+        <label class="title" for="flickerDuty">Red duty cycle</label>
+        <div class="range-row">
+          <input id="flickerDuty" type="range" min="10" max="90" step="5" value="50">
+          <output id="flickerDutyOut">50%</output>
+        </div>
+        <div class="help">50% gives equal red and black time.</div>
+      </div>
+      <div class="field">
+        <label class="title" for="screenWake">Long-run behavior</label>
+        <label class="check">
+          <input id="screenWake" type="checkbox" checked>
+          <span>Request browser screen wake lock while the journey runs.</span>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>5. Program map</h2>
+    <div id="timeline" class="timeline"></div>
+    <div id="phaseList" class="phase-list"></div>
+    <div id="cueSummary" class="cue-summary"></div>
+  </section>
+
+  <section class="panel">
+    <input id="ack" type="checkbox" checked hidden>
+    <div class="launch-note">Start the selected mode here, from the one-tap controls at the top, or from the persistent button at the bottom.</div>
+    <div class="actions">
+      <button id="startButton" class="primary">Start full journey</button>
+      <button id="previewButton" class="secondary">Run compressed preview</button>
+      <button id="cueTestButton" class="secondary">Test dream cue</button>
+      <button id="audioTestButton" class="secondary">Test background audio</button>
+    </div>
+    <div id="durationWarning" class="warning-line"></div>
+    <details>
+      <summary>Practical note for an eight-hour Vision Pro run</summary>
+      <p class="help">The program can run eight hours, but Vision Pro is not a sleep mask. Apple recommends regular breaks, and the browser must remain active. For an all-night experiment, the most meaningful parts are the conditioned audio cue and brief dim-red cue windows. The app keeps the long middle sections black and quiet rather than flashing for hours.</p>
+    </details>
+  </section>
+
+  <section class="panel">
+    <h2>Dream log</h2>
+    <div id="logList" class="help">No entries yet.</div>
+    <div class="actions">
+      <button id="clearLogButton" class="secondary">Clear local dream log</button>
+    </div>
+  </section>
+</main>
+
+<div id="launchDock" class="launch-dock">
+  <div class="launch-dock-copy">
+    <div id="launchDockMode">Pure Ganzflicker</div>
+    <div id="launchDockDetail">7.5 Hz · continuous · visual only</div>
+  </div>
+  <button id="launchDockButton" type="button">START GANZFLICKER</button>
+</div>
+
+<div id="stage">
+  <div id="stageHud">
+    <div id="stageTop">
+      <div id="stageIdentity">
+        <div id="stageJourney"></div>
+        <div id="stagePhase"></div>
+      </div>
+      <button id="stopButton">STOP</button>
+    </div>
+    <div id="stageBottom">
+      <div id="cueBadge">DREAM CUE</div>
+      <div id="stageClock"></div>
+      <div id="progressTrack"><div id="progressBar"></div></div>
+    </div>
+  </div>
+</div>
+
+<div id="journalOverlay">
+  <div class="journal-card">
+    <h2>Dream journal</h2>
+    <p id="journalContext"></p>
+    <div class="score-grid">
+      <div class="field">
+        <label class="title" for="lucidityScore">Lucidity</label>
+        <select id="lucidityScore">
+          <option value="0">0 - No dream recalled</option>
+          <option value="1">1 - Dream recalled, not lucid</option>
+          <option value="2">2 - Questioned the dream</option>
+          <option value="3">3 - Briefly lucid</option>
+          <option value="4">4 - Clearly lucid</option>
+          <option value="5">5 - Sustained lucid dream</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="title" for="vividnessScore">Vividness</label>
+        <select id="vividnessScore">
+          <option value="0">0 - None</option>
+          <option value="1">1 - Faint</option>
+          <option value="2">2 - Fragmented</option>
+          <option value="3">3 - Moderate</option>
+          <option value="4">4 - Vivid</option>
+          <option value="5">5 - Hyper-real</option>
+        </select>
+      </div>
+    </div>
+    <div class="field" style="margin-top:12px">
+      <label class="title" for="dreamNotes">What happened?</label>
+      <textarea id="dreamNotes" placeholder="Dream imagery, whether the cue appeared, lucidity trigger, emotional tone, sleep interruptions, comfort, and anything to change next time."></textarea>
+    </div>
+    <div class="journal-actions">
+      <button id="saveJournalButton" class="primary">Save locally</button>
+      <button id="skipJournalButton" class="secondary">Skip</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<!-- deployed for Jason DeWater private testing; unlisted, noindex -->
+</body>
+</html>
