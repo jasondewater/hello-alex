@@ -1,0 +1,67 @@
+name: Validate Ganzflicker hosts
+
+on:
+  push:
+    branches:
+      - ganzflicker-lab-c78cc4f0
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check candidate headers and content
+        shell: bash
+        run: |
+          set -u
+          SHA="88ab6f7112ae8d8a1fd467bb65de11e416da1c24"
+          declare -A URLS
+          URLS[rawgithack]="https://rawcdn.githack.com/jasondewater/hello-alex/${SHA}/index.html"
+          URLS[statically]="https://cdn.statically.io/gh/jasondewater/hello-alex@${SHA}/index.html"
+          URLS[githubraw]="https://cdn.githubraw.com/jasondewater/hello-alex/${SHA}/index.html"
+          for name in rawgithack statically githubraw; do
+            url="${URLS[$name]}"
+            echo "===== $name ====="
+            echo "$url"
+            curl -fsSLI --max-time 30 "$url" | sed -n '1,25p' || true
+            curl -fsSL --max-time 30 "$url" -o "/tmp/${name}.html" || true
+            wc -c "/tmp/${name}.html" 2>/dev/null || true
+            head -c 100 "/tmp/${name}.html" 2>/dev/null || true
+            echo
+          done
+
+      - name: Browser smoke test candidates
+        shell: bash
+        run: |
+          set -u
+          SHA="88ab6f7112ae8d8a1fd467bb65de11e416da1c24"
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          echo "Chrome: $CHROME"
+          if [ -z "$CHROME" ]; then
+            exit 0
+          fi
+          declare -A URLS
+          URLS[rawgithack]="https://rawcdn.githack.com/jasondewater/hello-alex/${SHA}/index.html"
+          URLS[statically]="https://cdn.statically.io/gh/jasondewater/hello-alex@${SHA}/index.html"
+          URLS[githubraw]="https://cdn.githubraw.com/jasondewater/hello-alex/${SHA}/index.html"
+          for name in rawgithack statically githubraw; do
+            url="${URLS[$name]}"
+            echo "===== RENDER $name ====="
+            timeout 45s "$CHROME" \
+              --headless=new \
+              --no-sandbox \
+              --disable-gpu \
+              --disable-dev-shm-usage \
+              --virtual-time-budget=5000 \
+              --dump-dom "$url" > "/tmp/${name}-dom.html" 2>"/tmp/${name}-chrome.log" || true
+            echo "DOM bytes: $(wc -c < "/tmp/${name}-dom.html" 2>/dev/null || echo 0)"
+            grep -o '<title>[^<]*</title>' "/tmp/${name}-dom.html" | head -1 || true
+            grep -q 'START GANZFLICKER' "/tmp/${name}-dom.html" && echo 'HAS_START_BUTTON=yes' || echo 'HAS_START_BUTTON=no'
+            grep -q '<h3>Pure Ganzflicker</h3>' "/tmp/${name}-dom.html" && echo 'JAVASCRIPT_RENDERED=yes' || echo 'JAVASCRIPT_RENDERED=no'
+            grep -q 'class="js"' "/tmp/${name}-dom.html" && echo 'JS_CLASS=yes' || echo 'JS_CLASS=no'
+            tail -20 "/tmp/${name}-chrome.log" || true
+          done
