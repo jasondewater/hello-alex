@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#050506">
+<meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Ganzflicker Journey XR v12</title>
+<style>
+:root{
+  color-scheme:dark;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:#050506;color:#f5f5f7}
+body{padding:24px 24px 118px}
+main{width:min(900px,100%);margin:auto}
+.hero{padding:22px 0 8px}
+h1{font-size:clamp(38px,8vw,70px);letter-spacing:-.055em;margin:0 0 8px}
+.lede{font-size:18px;line-height:1.5;color:#aaaab3;margin:0;max-width:790px}
+.build{display:inline-block;margin-top:12px;padding:7px 10px;border-radius:999px;background:#17171c;border:1px solid #303038;color:#bdbdc6;font-size:13px}
+.panel{margin:18px 0;background:#111115;border:1px solid #303037;border-radius:20px;padding:18px}
+.panel h2{margin:0 0 14px;font-size:22px}
+.status{padding:14px;border-radius:14px;background:#19191f;border:1px solid #383840;line-height:1.45;margin-bottom:15px}
+.status[data-kind="ready"]{border-color:#39694a}
+.status[data-kind="active"]{border-color:#8d3131}
+.status[data-kind="error"]{border-color:#a94a4a}
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mode-card{display:block;background:#19191e;border:1px solid #34343c;border-radius:16px;padding:15px;cursor:pointer}
+.mode-card.selected{border-color:#d4d4db;box-shadow:0 0 0 1px #d4d4db inset}
+.mode-card input{position:absolute;opacity:0;pointer-events:none}
+.mode-kicker{display:block;color:#92929b;font-size:12px;text-transform:uppercase;letter-spacing:.09em;margin-bottom:6px}
+.mode-name{display:block;font-size:19px;font-weight:800;margin-bottom:5px}
+.mode-desc{display:block;color:#aaaab3;line-height:1.4}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field{background:#19191e;border:1px solid #303038;border-radius:15px;padding:14px}
+label.title{display:block;font-weight:720;margin-bottom:8px}
+input[type=range],select,input[type=number]{width:100%}
+select,input[type=number]{background:#25252c;color:#fff;border:1px solid #45454e;border-radius:11px;padding:11px;font-size:16px}
+.row{display:flex;align-items:center;gap:12px}
+.row output{min-width:78px;text-align:right;font-variant-numeric:tabular-nums}
+.preset-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.preset-row button{padding:8px 11px;font-size:14px;background:#28282f;color:#fff;border:1px solid #45454e}
+.timeline{display:flex;height:52px;border-radius:14px;overflow:hidden;border:1px solid #3a3a42;background:#09090b}
+.segment{display:flex;align-items:center;justify-content:center;text-align:center;padding:5px;font-size:11px;font-weight:750;line-height:1.12;border-right:1px solid rgba(255,255,255,.13);min-width:2px}
+.segment:nth-child(odd){background:#471313}
+.segment:nth-child(even){background:#251010}
+.phase-list{margin-top:12px;display:grid;gap:8px}
+.phase-row{display:grid;grid-template-columns:minmax(140px,1.2fr) 90px minmax(220px,2fr);gap:12px;align-items:center;background:#18181d;border:1px solid #303038;border-radius:12px;padding:11px 12px}
+.phase-name{font-weight:750}
+.phase-time{font-variant-numeric:tabular-nums;color:#d0d0d6}
+.phase-detail{color:#9898a2;font-size:13px;line-height:1.35}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+button{appearance:none;border:0;border-radius:999px;padding:15px 18px;font-size:17px;font-weight:800;cursor:pointer}
+.primary{background:#fff;color:#000}
+.secondary{background:#26262d;color:#fff;border:1px solid #45454e}
+.danger{background:#3a1717;color:#fff;border:1px solid #743232}
+.small{font-size:13px;line-height:1.45;color:#90909a;margin-top:9px}
+.diagnostics{font:600 13px ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;color:#cfcfd5;background:#09090b;border-radius:12px;padding:12px;margin-top:14px}
+.launch-dock{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:20;width:min(860px,calc(100% - 32px));display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 14px;background:rgba(16,16,20,.94);backdrop-filter:blur(20px);border:1px solid #3a3a43;border-radius:20px;box-shadow:0 18px 60px rgba(0,0,0,.55)}
+.dock-copy{min-width:0}
+.dock-title{font-weight:800}
+.dock-detail{color:#9797a1;font-size:13px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.launch-dock button{flex:0 0 auto;padding:13px 18px}
+@media(max-width:700px){
+  body{padding:16px 16px 126px}
+  .grid,.mode-grid,.actions{grid-template-columns:1fr}
+  .phase-row{grid-template-columns:1fr}
+  .phase-detail{margin-top:-4px}
+  .launch-dock{align-items:stretch;flex-direction:column}
+  .launch-dock button{width:100%}
+}
+</style>
+</head>
+<body>
+<main>
+<section class="hero">
+<h1>Ganzflicker Journey XR</h1>
+<p class="lede">The working Vision Pro frame engine, now with a proportional visual journey that continuously changes flicker frequency, red intensity, duty cycle, and pacing.</p>
+<div class="build">Private build v12 · frame-delta engine preserved from working v11</div>
+</section>
+
+<section class="panel">
+<div id="status" class="status" data-kind="checking">Checking immersive WebXR support…</div>
+<h2>Choose the experience</h2>
+<div class="mode-grid">
+<label class="mode-card selected" data-mode="journey">
+<input type="radio" name="experience" value="journey" checked>
+<span class="mode-kicker">Programmed journey</span>
+<span class="mode-name">Frequency Odyssey</span>
+<span class="mode-desc">An evolving arc through red immersion, faster gates, descending frequencies, deep pulses, a sparse void beacon, and a measured return.</span>
+</label>
+<label class="mode-card" data-mode="pure">
+<input type="radio" name="experience" value="pure">
+<span class="mode-kicker">Direct mode</span>
+<span class="mode-name">Pure Ganzflicker</span>
+<span class="mode-desc">One constant frequency, intensity, and duty cycle. This preserves the exact v11 behavior that worked.</span>
+</label>
+</div>
+</section>
+
+<section class="panel" id="journeyPanel">
+<h2>Journey design</h2>
+<div class="grid">
+<div class="field">
+<label class="title" for="duration">Total journey length</label>
+<div class="row">
+<input id="duration" type="number" min="5" max="480" step="1" value="45">
+<output id="durationOut">45 min</output>
+</div>
+<div class="preset-row">
+<button type="button" data-minutes="10">10m</button>
+<button type="button" data-minutes="20">20m</button>
+<button type="button" data-minutes="30">30m</button>
+<button type="button" data-minutes="45">45m</button>
+<button type="button" data-minutes="60">1h</button>
+<button type="button" data-minutes="90">90m</button>
+<button type="button" data-minutes="120">2h</button>
+<button type="button" data-minutes="240">4h</button>
+<button type="button" data-minutes="480">8h</button>
+</div>
+</div>
+<div class="field">
+<label class="title" for="endBehavior">At the end</label>
+<select id="endBehavior">
+<option value="exit" selected>Exit immersion automatically</option>
+<option value="loop">Loop the full journey</option>
+<option value="hold">Hold the final dim-red phase</option>
+</select>
+<div class="small">Every phase expands or contracts proportionately to the selected total time.</div>
+</div>
+<div class="field">
+<label class="title" for="journeyScale">Journey intensity</label>
+<div class="row">
+<input id="journeyScale" type="range" min="30" max="100" step="1" value="85">
+<output id="journeyScaleOut">85%</output>
+</div>
+<div class="small">Scales all programmed red intensities without changing the journey’s frequency path.</div>
+</div>
+<div class="field">
+<label class="title">Program behavior</label>
+<div>Frequency sweeps: 10 → 8 → 6 → 4.2 → 1.6 → 7.5 Hz</div>
+<div class="small">Duty cycle and intensity evolve independently, with one sparse low-frequency integration phase.</div>
+</div>
+</div>
+</section>
+
+<section class="panel" id="purePanel" hidden>
+<h2>Pure Ganzflicker settings</h2>
+<div class="grid">
+<div class="field">
+<label class="title" for="frequency">Frequency</label>
+<div class="row"><input id="frequency" type="range" min="1" max="15" step="0.5" value="7.5"><output id="frequencyOut">7.5 Hz</output></div>
+</div>
+<div class="field">
+<label class="title" for="intensity">Red intensity</label>
+<div class="row"><input id="intensity" type="range" min="10" max="100" step="1" value="100"><output id="intensityOut">100%</output></div>
+</div>
+<div class="field">
+<label class="title" for="duty">Red duty cycle</label>
+<div class="row"><input id="duty" type="range" min="10" max="90" step="5" value="50"><output id="dutyOut">50%</output></div>
+</div>
+<div class="field">
+<label class="title">Run behavior</label>
+<div>Continuous until you pinch or use the Digital Crown.</div>
+<div class="small">At 90 Hz and 7.5 Hz, the default cadence is six red frames followed by six black frames.</div>
+</div>
+</div>
+</section>
+
+<section class="panel" id="mapPanel">
+<h2>Journey map</h2>
+<div id="timeline" class="timeline"></div>
+<div id="phaseList" class="phase-list"></div>
+</section>
+
+<section class="panel">
+<h2>Launch</h2>
+<div class="actions">
+<button id="enter" class="primary" disabled>ENTER FREQUENCY ODYSSEY</button>
+<button id="pureLaunch" class="secondary" disabled>ENTER PURE 7.5 HZ</button>
+<button id="slowTest" class="secondary" disabled>ENTER 1 HZ TEST</button>
+<button id="solidTest" class="secondary" disabled>ENTER SOLID RED DIAGNOSTIC</button>
+<button id="exit" class="danger" disabled>EXIT IMMERSION</button>
+</div>
+<p class="small">Pinch once after two seconds or use the Digital Crown to exit. The journey never replaces the working XR clock with the ordinary webpage clock.</p>
+<div id="diagnostics" class="diagnostics">No immersive run yet.</div>
+</section>
+</main>
+
+<div class="launch-dock">
+<div class="dock-copy">
+<div id="dockTitle" class="dock-title">Frequency Odyssey</div>
+<div id="dockDetail" class="dock-detail">45 minutes · evolving frequency, intensity, and duty cycle</div>
+</div>
+<button id="dockLaunch" class="primary" disabled>ENTER JOURNEY</button>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+const $ = id => document.getElementById(id);
+const clamp = (value, minimum, maximum) => Math.min(maximum, Math.max(minimum, value));
+const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = t => t * t * (3 - 2 * t);
+
+const ui = {
+  status: $('status'),
+  duration: $('duration'),
+  durationOut: $('durationOut'),
+  endBehavior: $('endBehavior'),
+  journeyScale: $('journeyScale'),
+  journeyScaleOut: $('journeyScaleOut'),
+  frequency: $('frequency'),
+  frequencyOut: $('frequencyOut'),
+  intensity: $('intensity'),
+  intensityOut: $('intensityOut'),
+  duty: $('duty'),
+  dutyOut: $('dutyOut'),
+  journeyPanel: $('journeyPanel'),
+  purePanel: $('purePanel'),
+  mapPanel: $('mapPanel'),
+  timeline: $('timeline'),
+  phaseList: $('phaseList'),
+  enter: $('enter'),
+  pureLaunch: $('pureLaunch'),
+  slowTest: $('slowTest'),
+  solidTest: $('solidTest'),
+  exit: $('exit'),
+  diagnostics: $('diagnostics'),
+  dockTitle: $('dockTitle'),
+  dockDetail: $('dockDetail'),
+  dockLaunch: $('dockLaunch')
+};
+
+const JOURNEY = [
+  {
+    name: 'Red Arrival',
+    weight: 0.07,
+    mode: 'solid',
+    intensityA: 0.12,
+    intensityB: 0.55,
+    breatheHz: 0.06,
+    detail: 'Steady red rises slowly, with a barely perceptible brightness breath.'
+  },
+  {
+    name: 'Alpha Gate',
+    weight: 0.13,
+    mode: 'flicker',
+    hzA: 10,
+    hzB: 8,
+    intensityA: 0.55,
+    intensityB: 0.95,
+    dutyA: 0.62,
+    dutyB: 0.50,
+    detail: 'The field opens at a faster rate while red intensity builds toward its peak.'
+  },
+  {
+    name: 'Theta Descent',
+    weight: 0.18,
+    mode: 'flicker',
+    hzA: 8,
+    hzB: 6,
+    intensityA: 0.95,
+    intensityB: 0.78,
+    dutyA: 0.50,
+    dutyB: 0.44,
+    detail: 'Frequency glides downward while the red phase narrows and softens.'
+  },
+  {
+    name: 'Deep Theta',
+    weight: 0.18,
+    mode: 'flicker',
+    hzA: 6,
+    hzB: 4.2,
+    intensityA: 0.78,
+    intensityB: 0.62,
+    dutyA: 0.44,
+    dutyB: 0.58,
+    breatheHz: 0.035,
+    detail: 'Slower pulses broaden, with a long low-amplitude brightness wave underneath.'
+  },
+  {
+    name: 'Pulse Field',
+    weight: 0.14,
+    mode: 'flicker',
+    hzA: 4.2,
+    hzB: 1.6,
+    intensityA: 0.62,
+    intensityB: 0.36,
+    dutyA: 0.58,
+    dutyB: 0.28,
+    detail: 'The rhythm becomes sparse and unmistakable as frequency and red exposure both fall.'
+  },
+  {
+    name: 'Void Beacon',
+    weight: 0.12,
+    mode: 'flicker',
+    hzA: 0.16,
+    hzB: 0.32,
+    intensityA: 0.15,
+    intensityB: 0.28,
+    dutyA: 0.10,
+    dutyB: 0.18,
+    breatheHz: 0.025,
+    detail: 'Mostly darkness, interrupted by brief dim-red beacons every few seconds.'
+  },
+  {
+    name: 'Return Arc',
+    weight: 0.12,
+    mode: 'flicker',
+    hzA: 2,
+    hzB: 7.5,
+    intensityA: 0.34,
+    intensityB: 0.76,
+    dutyA: 0.30,
+    dutyB: 0.50,
+    detail: 'Frequency, brightness, and red exposure rise together toward the familiar 7.5 Hz field.'
+  },
+  {
+    name: 'Red Landing',
+    weight: 0.06,
+    mode: 'solid',
+    intensityA: 0.38,
+    intensityB: 0.08,
+    breatheHz: 0.04,
+    detail: 'Flicker resolves into dim steady red before the session exits, loops, or holds.'
+  }
+];
+
+let selectedExperience = 'journey';
+let xrSession = null;
+let xrRefSpace = null;
+let gl = null;
+let launchWallTime = 0;
+let requestedRate = null;
+let launchMode = 'journey';
+let activeConfig = null;
+
+let lastXRTime = null;
+let phasePosition = 0;
+let journeyElapsedMs = 0;
+let controlElapsedMs = 0;
+let activePhaseIndex = -1;
+let lastWasRed = null;
+let endingRequested = false;
+
+let stats = {};
+
+function resetStats() {
+  stats = {
+    frames: 0,
+    red: 0,
+    black: 0,
+    poses: 0,
+    transitions: 0,
+    phaseChanges: 0,
+    firstWall: null,
+    lastWall: null,
+    error: '',
+    minDelta: null,
+    maxDelta: null,
+    zeroDeltas: 0,
+    completedLoops: 0,
+    phaseNames: []
+  };
+  lastXRTime = null;
+  phasePosition = 0;
+  journeyElapsedMs = 0;
+  controlElapsedMs = 0;
+  activePhaseIndex = -1;
+  lastWasRed = null;
+  endingRequested = false;
+  ui.diagnostics.textContent = 'Immersive session starting…';
+}
+
+function setStatus(kind, text) {
+  ui.status.dataset.kind = kind;
+  ui.status.textContent = text;
+}
+
+function formatDuration(seconds) {
+  const rounded = Math.max(0, Math.round(seconds));
+  const hours = Math.floor(rounded / 3600);
+  const minutes = Math.floor((rounded % 3600) / 60);
+  const secs = rounded % 60;
+  if (hours) return `${hours}h ${minutes ? `${minutes}m` : ''}`.trim();
+  if (minutes) return `${minutes}m ${secs ? `${secs}s` : ''}`.trim();
+  return `${secs}s`;
+}
+
+function compileJourney(totalMs) {
+  let cursor = 0;
+  return JOURNEY.map((source, index) => {
+    const durationMs = totalMs * source.weight;
+    const phase = {
+      ...source,
+      index,
+      startMs: cursor,
+      durationMs,
+      endMs: cursor + durationMs
+    };
+    cursor += durationMs;
+    return phase;
+  });
+}
+
+function renderJourneyMap() {
+  const minutes = clamp(Number(ui.duration.value) || 45, 5, 480);
+  ui.duration.value = String(minutes);
+  ui.durationOut.textContent = `${minutes} min`;
+  ui.journeyScaleOut.textContent = `${ui.journeyScale.value}%`;
+  const phases = compileJourney(minutes * 60000);
+
+  ui.timeline.innerHTML = '';
+  ui.phaseList.innerHTML = '';
+
+  phases.forEach(phase => {
+    const segment = document.createElement('div');
+    segment.className = 'segment';
+    segment.style.flex = String(phase.weight);
+    segment.textContent = phase.weight >= 0.1 ? phase.name : '';
+    segment.title = `${phase.name}: ${formatDuration(phase.durationMs / 1000)}`;
+    ui.timeline.appendChild(segment);
+
+    const row = document.createElement('div');
+    row.className = 'phase-row';
+    const settings = phase.mode === 'solid'
+      ? `steady red · ${Math.round(phase.intensityA * 100)}→${Math.round(phase.intensityB * 100)}%`
+      : `${phase.hzA}→${phase.hzB} Hz · ${Math.round(phase.intensityA * 100)}→${Math.round(phase.intensityB * 100)}% red · ${Math.round(phase.dutyA * 100)}→${Math.round(phase.dutyB * 100)}% duty`;
+    row.innerHTML = `
+      <div class="phase-name">${phase.name}</div>
+      <div class="phase-time">${formatDuration(phase.durationMs / 1000)}</div>
+      <div class="phase-detail">${settings}<br>${phase.detail}</div>
+    `;
+    ui.phaseList.appendChild(row);
+  });
+
+  ui.dockDetail.textContent = `${minutes} minutes · evolving frequency, intensity, and duty cycle`;
+}
+
+function updateLabels() {
+  ui.frequencyOut.textContent = `${Number(ui.frequency.value).toFixed(1)} Hz`;
+  ui.intensityOut.textContent = `${ui.intensity.value}%`;
+  ui.dutyOut.textContent = `${ui.duty.value}%`;
+  renderJourneyMap();
+}
+
+function selectExperience(value) {
+  selectedExperience = value;
+  document.querySelectorAll('[data-mode]').forEach(card => {
+    card.classList.toggle('selected', card.dataset.mode === value);
+    const radio = card.querySelector('input');
+    if (radio) radio.checked = card.dataset.mode === value;
+  });
+  ui.journeyPanel.hidden = value !== 'journey';
+  ui.mapPanel.hidden = value !== 'journey';
+  ui.purePanel.hidden = value !== 'pure';
+  ui.enter.textContent = value === 'journey'
+    ? 'ENTER FREQUENCY ODYSSEY'
+    : `ENTER PURE ${Number(ui.frequency.value).toFixed(1)} HZ`;
+  ui.dockTitle.textContent = value === 'journey'
+    ? 'Frequency Odyssey'
+    : `Pure Ganzflicker · ${Number(ui.frequency.value).toFixed(1)} Hz`;
+  ui.dockDetail.textContent = value === 'journey'
+    ? `${ui.duration.value} minutes · evolving frequency, intensity, and duty cycle`
+    : `${ui.intensity.value}% intensity · ${ui.duty.value}% red duty · continuous`;
+  ui.dockLaunch.textContent = value === 'journey'
+    ? 'ENTER JOURNEY'
+    : 'ENTER PURE GF';
+}
+
+function showStats(prefix = 'Last run') {
+  const phaseLine = stats.phaseNames.length
+    ? `phases reached: ${stats.phaseNames.join(' → ')}\n`
+    : '';
+  ui.diagnostics.textContent =
+`${prefix}
+mode: ${launchMode}
+frames: ${stats.frames}
+red frames: ${stats.red}
+black frames: ${stats.black}
+red/black transitions: ${stats.transitions}
+phase changes: ${stats.phaseChanges}
+${phaseLine}completed journey loops: ${stats.completedLoops}
+pose frames: ${stats.poses}
+requested frame rate: ${requestedRate || 'default'}
+first frame delay: ${stats.firstWall === null ? 'n/a' : Math.round(stats.firstWall - launchWallTime) + ' ms'}
+XR delta range: ${stats.minDelta === null ? 'n/a' : stats.minDelta.toFixed(3) + '-' + stats.maxDelta.toFixed(3) + ' ms'}
+zero/invalid XR deltas: ${stats.zeroDeltas}
+last WebGL error: ${stats.error || 'none'}`;
+}
+
+async function init() {
+  if (!navigator.xr?.isSessionSupported) {
+    setStatus('error', 'WebXR is not exposed by this Safari configuration.');
+    return;
+  }
+  try {
+    const supported = await navigator.xr.isSessionSupported('immersive-vr');
+    if (!supported) {
+      setStatus('error', 'Safari reports that immersive-vr is unavailable.');
+      return;
+    }
+    setStatus('ready', 'Immersive WebXR is ready. V12 preserves the working V11 frame-delta engine.');
+    [ui.enter, ui.pureLaunch, ui.slowTest, ui.solidTest, ui.dockLaunch].forEach(button => {
+      button.disabled = false;
+    });
+  } catch (error) {
+    setStatus('error', `WebXR detection failed: ${error?.message || error}`);
+  }
+}
+
+function frameDelta(time) {
+  let dt;
+  if (lastXRTime === null) {
+    dt = 1000 / (requestedRate || 90);
+  } else {
+    dt = time - lastXRTime;
+  }
+  lastXRTime = time;
+
+  if (!Number.isFinite(dt) || dt <= 0 || dt > 250) {
+    stats.zeroDeltas += 1;
+    dt = 1000 / (requestedRate || 90);
+  }
+
+  stats.minDelta = stats.minDelta === null ? dt : Math.min(stats.minDelta, dt);
+  stats.maxDelta = stats.maxDelta === null ? dt : Math.max(stats.maxDelta, dt);
+  return dt;
+}
+
+function breatheMultiplier(phase, elapsedSeconds) {
+  if (!phase.breatheHz) return 1;
+  return 0.88 + 0.12 * (0.5 + 0.5 * Math.sin(elapsedSeconds * Math.PI * 2 * phase.breatheHz));
+}
+
+function journeyRedForFrame(dt) {
+  const totalMs = activeConfig.totalMs;
+  journeyElapsedMs += dt;
+
+  if (journeyElapsedMs >= totalMs) {
+    if (activeConfig.endBehavior === 'loop') {
+      journeyElapsedMs %= totalMs;
+      activePhaseIndex = -1;
+      phasePosition = 0;
+      stats.completedLoops += 1;
+    } else if (activeConfig.endBehavior === 'hold') {
+      journeyElapsedMs = totalMs - 0.001;
+    } else {
+      journeyElapsedMs = totalMs - 0.001;
+      endingRequested = true;
+    }
+  }
+
+  const phase = activeConfig.phases.find(item =>
+    journeyElapsedMs >= item.startMs && journeyElapsedMs < item.endMs
+  ) || activeConfig.phases[activeConfig.phases.length - 1];
+
+  if (phase.index !== activePhaseIndex) {
+    activePhaseIndex = phase.index;
+    phasePosition = 0;
+    stats.phaseChanges += 1;
+    stats.phaseNames.push(phase.name);
+  }
+
+  const phaseT = clamp((journeyElapsedMs - phase.startMs) / Math.max(1, phase.durationMs), 0, 1);
+  const eased = smooth(phaseT);
+  const elapsedSeconds = journeyElapsedMs / 1000;
+  const globalScale = activeConfig.scale;
+
+  let intensity = lerp(phase.intensityA, phase.intensityB, eased) * globalScale;
+  intensity *= breatheMultiplier(phase, elapsedSeconds);
+  intensity = clamp(intensity, 0, 1);
+
+  if (phase.mode === 'solid') return intensity;
+
+  const hz = Math.max(0.05, lerp(phase.hzA, phase.hzB, eased));
+  const duty = clamp(lerp(phase.dutyA, phase.dutyB, eased), 0.01, 0.99);
+  phasePosition = (phasePosition + (dt / 1000) * hz) % 1;
+  return phasePosition < duty ? intensity : 0;
+}
+
+function directRedForFrame(dt) {
+  const level = activeConfig.intensity;
+  if (launchMode === 'solid') return level;
+
+  if (launchMode === 'slow') {
+    phasePosition = (phasePosition + (dt / 1000)) % 1;
+    return phasePosition < 0.5 ? level : 0;
+  }
+
+  const hz = activeConfig.frequency;
+  phasePosition = (phasePosition + (dt / 1000) * hz) % 1;
+  return phasePosition < activeConfig.duty ? level : 0;
+}
+
+function redForFrame(dt) {
+  if (launchMode === 'journey') return journeyRedForFrame(dt);
+  return directRedForFrame(dt);
+}
+
+function onXRFrame(time, frame) {
+  const session = frame.session;
+  session.requestAnimationFrame(onXRFrame);
+
+  if (stats.firstWall === null) stats.firstWall = performance.now();
+  stats.lastWall = performance.now();
+
+  let pose = null;
+  try {
+    pose = frame.getViewerPose(xrRefSpace);
+  } catch (error) {
+    stats.error = `pose: ${error?.message || error}`;
+  }
+  if (!pose) return;
+
+  stats.poses += 1;
+  const layer = session.renderState.baseLayer;
+  gl.bindFramebuffer(gl.FRAMEBUFFER, layer.framebuffer);
+
+  const dt = frameDelta(time);
+  const red = redForFrame(dt);
+  gl.clearColor(red, 0, 0, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+  stats.frames += 1;
+  const isRed = red > 0.02;
+  if (isRed) stats.red += 1;
+  else stats.black += 1;
+  if (lastWasRed !== null && isRed !== lastWasRed) stats.transitions += 1;
+  lastWasRed = isRed;
+
+  if (stats.frames < 5 || stats.frames % 300 === 0) {
+    const error = gl.getError();
+    if (error !== gl.NO_ERROR) stats.error = `0x${error.toString(16)}`;
+  }
+
+  if (endingRequested && xrSession) {
+    endingRequested = false;
+    xrSession.end().catch(() => {});
+  }
+}
+
+function snapshotConfig(selectedMode) {
+  if (selectedMode === 'journey') {
+    const minutes = clamp(Number(ui.duration.value) || 45, 5, 480);
+    const totalMs = minutes * 60000;
+    return {
+      totalMs,
+      phases: compileJourney(totalMs),
+      scale: clamp(Number(ui.journeyScale.value) / 100, 0.3, 1),
+      endBehavior: ui.endBehavior.value
+    };
+  }
+  return {
+    frequency: selectedMode === 'slow'
+      ? 1
+      : Math.max(0.1, Number(ui.frequency.value) || 7.5),
+    intensity: clamp(Number(ui.intensity.value) / 100, 0.1, 1),
+    duty: selectedMode === 'slow'
+      ? 0.5
+      : clamp(Number(ui.duty.value) / 100, 0.01, 0.99)
+  };
+}
+
+async function start(selectedMode) {
+  if (xrSession) return;
+
+  launchMode = selectedMode;
+  activeConfig = snapshotConfig(selectedMode);
+  resetStats();
+  launchWallTime = performance.now();
+  requestedRate = null;
+
+  try {
+    const session = await navigator.xr.requestSession('immersive-vr');
+    xrSession = session;
+    ui.exit.disabled = false;
+    [ui.enter, ui.pureLaunch, ui.slowTest, ui.solidTest, ui.dockLaunch].forEach(button => {
+      button.disabled = true;
+    });
+
+    session.addEventListener('end', onSessionEnded, { once: true });
+    session.addEventListener('select', () => {
+      if (performance.now() - launchWallTime > 2000) session.end();
+    });
+
+    const canvas = document.createElement('canvas');
+    gl = canvas.getContext('webgl', { xrCompatible: true, alpha: false });
+    if (!gl) throw new Error('Safari could not create the working-style WebGL context.');
+
+    session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl) });
+    xrRefSpace = await session.requestReferenceSpace('local');
+
+    if (session.updateTargetFrameRate && session.supportedFrameRates) {
+      const rates = Array.from(session.supportedFrameRates).map(Number);
+      requestedRate = [90, 120, 96, 100]
+        .find(target => rates.some(rate => Math.abs(rate - target) < 0.1)) || null;
+      if (requestedRate) {
+        try {
+          await session.updateTargetFrameRate(requestedRate);
+        } catch (_) {
+          requestedRate = null;
+        }
+      }
+    }
+
+    const description = selectedMode === 'journey'
+      ? `Frequency Odyssey · ${Math.round(activeConfig.totalMs / 60000)} minutes`
+      : selectedMode === 'slow'
+        ? '1 Hz red / black test'
+        : selectedMode === 'solid'
+          ? 'solid red diagnostic'
+          : `${activeConfig.frequency.toFixed(1)} Hz Pure Ganzflicker`;
+
+    setStatus(
+      'active',
+      `${description} active${requestedRate ? ` at ${requestedRate} Hz` : ''}. Pinch once after two seconds or use the Digital Crown to exit.`
+    );
+    session.requestAnimationFrame(onXRFrame);
+  } catch (error) {
+    stats.error = error?.message || String(error);
+    setStatus('error', `Immersive start failed: ${stats.error}`);
+    showStats('Failed run');
+    if (xrSession) {
+      try { await xrSession.end(); } catch (_) {}
+    }
+  }
+}
+
+function onSessionEnded() {
+  xrSession = null;
+  xrRefSpace = null;
+  gl = null;
+  ui.exit.disabled = true;
+  [ui.enter, ui.pureLaunch, ui.slowTest, ui.solidTest, ui.dockLaunch].forEach(button => {
+    button.disabled = false;
+  });
+  setStatus('ready', `Immersive WebXR is ready. ${stats.frames} frames were submitted in the last run.`);
+  showStats();
+}
+
+document.querySelectorAll('input[name="experience"]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    if (radio.checked) selectExperience(radio.value);
+  });
+});
+
+document.querySelectorAll('[data-minutes]').forEach(button => {
+  button.addEventListener('click', () => {
+    ui.duration.value = button.dataset.minutes;
+    renderJourneyMap();
+    selectExperience(selectedExperience);
+  });
+});
+
+ui.duration.addEventListener('input', () => {
+  renderJourneyMap();
+  selectExperience(selectedExperience);
+});
+ui.endBehavior.addEventListener('change', renderJourneyMap);
+ui.journeyScale.addEventListener('input', renderJourneyMap);
+[ui.frequency, ui.intensity, ui.duty].forEach(control => {
+  control.addEventListener('input', () => {
+    updateLabels();
+    selectExperience(selectedExperience);
+  });
+});
+
+ui.enter.addEventListener('click', () => start(selectedExperience === 'journey' ? 'journey' : 'pure'));
+ui.pureLaunch.addEventListener('click', () => start('pure'));
+ui.slowTest.addEventListener('click', () => start('slow'));
+ui.solidTest.addEventListener('click', () => start('solid'));
+ui.exit.addEventListener('click', () => xrSession?.end());
+ui.dockLaunch.addEventListener('click', () => start(selectedExperience === 'journey' ? 'journey' : 'pure'));
+
+updateLabels();
+selectExperience('journey');
+init();
+
+})();
+</script>
+</body>
+</html>
