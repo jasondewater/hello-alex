@@ -2,139 +2,60 @@
 
 /*
  * Ganzflicker Dream Lab v8
- * True immersive renderer for Apple Vision Pro Safari.
+ * Dedicated immersive renderer for Apple Vision Pro Safari.
  *
- * v8 fixes the black-screen startup race in v7. The v7 path entered WebXR,
- * then called the legacy DOM-fullscreen startup routine before it marked the
- * journey as running. On Vision Pro that could leave an active XR compositor
- * with no scheduled application frames. v8 starts the journey directly inside
- * WebXR, never requests DOM fullscreen, and clears each eye viewport explicitly.
+ * v7 successfully opened immersive-vr, but its stimulus still depended on the
+ * ordinary webpage animation loop. Safari can pause that loop while WebXR owns
+ * presentation, leaving the headset's XR framebuffer black. v8 advances the
+ * journey and draws both eye views directly from XRSession.requestAnimationFrame.
  */
 
-const gfNativeRAF = window.requestAnimationFrame.bind(window);
-const gfNativeCancelRAF = window.cancelAnimationFrame.bind(window);
 const gfOriginalStartSession = startSession;
 const gfOriginalFinishSession = finishSession;
 const gfOriginalRenderPlan = renderPlan;
-const gfOriginalRenderVisual = renderVisual;
 
 let gfXRSession = null;
 let gfXRReferenceSpace = null;
 let gfXRGl = null;
 let gfXRCanvas = null;
+let gfXRProgram = null;
+let gfXRBuffer = null;
+let gfXRPositionLocation = -1;
+let gfXRColorLocation = null;
+let gfXRFrameHandle = null;
 let gfXRStarting = false;
 let gfXRFinishing = false;
 let gfXRStartedAt = 0;
+let gfXRFirstFrameAt = null;
 let gfXRSupported = null;
-let gfXRLastError = '';
 let gfXRStatusNode = null;
 let gfXRTargetFrameRate = null;
-let gfCurrentRed = 0;
-let gfXRFrameCount = 0;
-let gfXRRedFrameCount = 0;
+let gfXRDiagnostics = null;
 
-function gfParseStageRed() {
-  const inlineColor = ui.stage.style.backgroundColor || '';
-  const inlineMatch = inlineColor.match(/rgba?\(\s*([\d.]+)/i);
-  if (inlineMatch) return clamp((Number(inlineMatch[1]) || 0) / 255, 0, 1);
-
-  try {
-    const computedColor = getComputedStyle(ui.stage).backgroundColor || '';
-    const computedMatch = computedColor.match(/rgba?\(\s*([\d.]+)/i);
-    if (computedMatch) return clamp((Number(computedMatch[1]) || 0) / 255, 0, 1);
-  } catch (_) {}
-
-  return 0;
-}
-
-function gfSetInitialRed() {
-  gfCurrentRed = clamp(Number(ui.visualIntensity.value) / 100, 0, 1);
-  ui.stage.style.backgroundColor = `rgb(${Math.round(gfCurrentRed * 255)},0,0)`;
-}
-
-renderVisual = function renderVisualAndCaptureXRColor(phase, phaseT, elapsed, activeCue) {
-  gfOriginalRenderVisual(phase, phaseT, elapsed, activeCue);
-  gfCurrentRed = gfParseStageRed();
-};
-
-function gfRenderImmersiveFrame(xrFrame) {
-  const session = gfXRSession;
-  const gl = gfXRGl;
-  const layer = session?.renderState?.baseLayer;
-  if (!session || !gl || !layer) return;
-
-  let pose = null;
-  try {
-    if (gfXRReferenceSpace) pose = xrFrame.getViewerPose(gfXRReferenceSpace);
-  } catch (_) {}
-
-  const red = clamp(gfCurrentRed, 0, 1);
-
-  gl.bindFramebuffer(gl.FRAMEBUFFER, layer.framebuffer);
-  gl.disable(gl.DEPTH_TEST);
-  gl.disable(gl.BLEND);
-  gl.colorMask(true, true, true, true);
-  gl.clearColor(red, 0, 0, 1);
-
-  // Clear the full XR layer first. This provides a fallback even if the viewer
-  // pose is temporarily unavailable during the first headset frame.
-  gl.disable(gl.SCISSOR_TEST);
-  gl.viewport(0, 0, layer.framebufferWidth, layer.framebufferHeight);
-  gl.clear(gl.COLOR_BUFFER_BIT);
-
-  // Then clear each eye viewport explicitly. This is the canonical WebXR path
-  // and avoids relying on a compositor to treat one whole-layer clear as valid
-  // content for both views.
-  if (pose?.views?.length) {
-    gl.enable(gl.SCISSOR_TEST);
-    for (const view of pose.views) {
-      const viewport = layer.getViewport(view);
-      if (!viewport) continue;
-      gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
-      gl.scissor(viewport.x, viewport.y, viewport.width, viewport.height);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-    }
-    gl.disable(gl.SCISSOR_TEST);
-  }
-
-  gl.flush();
-  gfXRFrameCount += 1;
-  if (red > 0.01) gfXRRedFrameCount += 1;
-}
-
-function gfInstallXRAnimationClock() {
-  window.requestAnimationFrame = callback => {
-    if (!gfXRSession) return gfNativeRAF(callback);
-    return gfXRSession.requestAnimationFrame((time, xrFrame) => {
-      try {
-        callback(time);
-      } catch (error) {
-        console.error('Ganzflicker XR frame callback failed:', error);
-        gfSetXRStatus('error', `XR frame callback failed: ${error?.message || String(error)}`);
-      }
-      if (gfXRSession && running) gfRenderImmersiveFrame(xrFrame);
-    });
-  };
-
-  window.cancelAnimationFrame = id => {
-    if (gfXRSession) {
-      try { gfXRSession.cancelAnimationFrame(id); } catch (_) {}
-      return;
-    }
-    gfNativeCancelRAF(id);
+function gfResetDiagnostics() {
+  gfXRDiagnostics = {
+    frames: 0,
+    redFrames: 0,
+    blackFrames: 0,
+    poseFrames: 0,
+    maxViews: 0,
+    lastGLError: 0,
+    firstFrameDelayMs: null
   };
 }
 
-function gfRestoreAnimationClock() {
-  window.requestAnimationFrame = gfNativeRAF;
-  window.cancelAnimationFrame = gfNativeCancelRAF;
-}
+gfResetDiagnostics();
 
 function gfSetXRStatus(kind, message) {
-  gfXRLastError = kind === 'error' ? message : '';
   if (!gfXRStatusNode) return;
   gfXRStatusNode.dataset.kind = kind;
   gfXRStatusNode.textContent = message;
+}
+
+function gfDiagnosticSummary(prefix = 'Last immersive run') {
+  const d = gfXRDiagnostics;
+  const error = d.lastGLError ? ` · WebGL error 0x${d.lastGLError.toString(16)}` : '';
+  return `${prefix}: ${d.frames} frames · ${d.redFrames} red · ${d.blackFrames} black · ${d.poseFrames} pose frames${error}`;
 }
 
 async function gfDetectXR() {
@@ -153,28 +74,264 @@ async function gfDetectXR() {
   gfSetXRStatus(
     gfXRSupported ? 'ready' : 'fallback',
     gfXRSupported
-      ? 'True immersive WebXR is ready. v8 starts the XR frame loop directly, without DOM fullscreen.'
-      : 'Immersive-vr is unavailable in this browser configuration. Starts will use the Safari-window fallback.'
+      ? 'Immersive WebXR is ready. v8 renders both eyes from the headset frame clock.'
+      : 'Immersive-vr is unavailable in this Safari configuration. Starts will use the window fallback.'
   );
   return gfXRSupported;
 }
 
-async function gfOpenXRSession() {
-  if (!navigator.xr?.requestSession || typeof XRWebGLLayer === 'undefined') {
-    throw new Error('WebXR immersive-vr is not available.');
+function gfCompileShader(gl, type, source) {
+  const shader = gl.createShader(type);
+  if (!shader) throw new Error('WebGL could not allocate a shader.');
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    const log = gl.getShaderInfoLog(shader) || 'Unknown shader compilation error.';
+    gl.deleteShader(shader);
+    throw new Error(log);
+  }
+  return shader;
+}
+
+function gfCreateRenderer(gl) {
+  const isWebGL2 = typeof WebGL2RenderingContext !== 'undefined'
+    && gl instanceof WebGL2RenderingContext;
+
+  const vertexSource = isWebGL2
+    ? `#version 300 es
+       in vec2 aPosition;
+       void main() { gl_Position = vec4(aPosition, 0.0, 1.0); }`
+    : `attribute vec2 aPosition;
+       void main() { gl_Position = vec4(aPosition, 0.0, 1.0); }`;
+
+  const fragmentSource = isWebGL2
+    ? `#version 300 es
+       precision highp float;
+       uniform vec3 uColor;
+       out vec4 outColor;
+       void main() { outColor = vec4(uColor, 1.0); }`
+    : `precision highp float;
+       uniform vec3 uColor;
+       void main() { gl_FragColor = vec4(uColor, 1.0); }`;
+
+  const vertex = gfCompileShader(gl, gl.VERTEX_SHADER, vertexSource);
+  const fragment = gfCompileShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
+  const program = gl.createProgram();
+  if (!program) throw new Error('WebGL could not allocate the XR render program.');
+
+  gl.attachShader(program, vertex);
+  gl.attachShader(program, fragment);
+  gl.linkProgram(program);
+  gl.deleteShader(vertex);
+  gl.deleteShader(fragment);
+
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    const log = gl.getProgramInfoLog(program) || 'Unknown shader link error.';
+    gl.deleteProgram(program);
+    throw new Error(log);
   }
 
-  // requestSession must be called immediately inside the initiating pinch/click.
-  const sessionPromise = navigator.xr.requestSession('immersive-vr');
+  const positionLocation = gl.getAttribLocation(program, 'aPosition');
+  const colorLocation = gl.getUniformLocation(program, 'uColor');
+  if (positionLocation < 0 || colorLocation === null) {
+    gl.deleteProgram(program);
+    throw new Error('WebGL could not locate the XR shader inputs.');
+  }
 
+  const buffer = gl.createBuffer();
+  if (!buffer) {
+    gl.deleteProgram(program);
+    throw new Error('WebGL could not allocate full-field geometry.');
+  }
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array([-1, -1, 3, -1, -1, 3]),
+    gl.STATIC_DRAW
+  );
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+  gfXRProgram = program;
+  gfXRBuffer = buffer;
+  gfXRPositionLocation = positionLocation;
+  gfXRColorLocation = colorLocation;
+}
+
+function gfStageRedLevel() {
+  const color = ui.stage.style.backgroundColor
+    || getComputedStyle(ui.stage).backgroundColor
+    || 'rgb(0,0,0)';
+  const values = color.match(/[\d.]+/g);
+  return clamp((Number(values?.[0]) || 0) / 255, 0, 1);
+}
+
+function gfDrawViewport(gl, viewport, red) {
+  gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
+  gl.useProgram(gfXRProgram);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gfXRBuffer);
+  gl.enableVertexAttribArray(gfXRPositionLocation);
+  gl.vertexAttribPointer(gfXRPositionLocation, 2, gl.FLOAT, false, 0, 0);
+  gl.uniform3f(gfXRColorLocation, red, 0, 0);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+
+function gfDrawImmersiveFrame(xrFrame, red) {
+  const session = gfXRSession;
+  const gl = gfXRGl;
+  const layer = session?.renderState?.baseLayer;
+  if (!session || !gl || !layer || !layer.framebuffer || !gfXRProgram) return false;
+
+  let pose = null;
+  try {
+    if (gfXRReferenceSpace) pose = xrFrame.getViewerPose(gfXRReferenceSpace);
+  } catch (_) {}
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, layer.framebuffer);
+  gl.disable(gl.SCISSOR_TEST);
+  gl.disable(gl.DEPTH_TEST);
+  gl.disable(gl.CULL_FACE);
+  gl.disable(gl.BLEND);
+  gl.colorMask(true, true, true, true);
+  gl.clearColor(0, 0, 0, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  if (pose?.views?.length) {
+    gfXRDiagnostics.poseFrames += 1;
+    gfXRDiagnostics.maxViews = Math.max(gfXRDiagnostics.maxViews, pose.views.length);
+    for (const view of pose.views) {
+      const viewport = layer.getViewport(view);
+      if (viewport) gfDrawViewport(gl, viewport, red);
+    }
+  } else {
+    gfDrawViewport(gl, {
+      x: 0,
+      y: 0,
+      width: layer.framebufferWidth,
+      height: layer.framebufferHeight
+    }, red);
+  }
+
+  gl.flush();
+  if (gfXRDiagnostics.frames < 10 || gfXRDiagnostics.frames % 300 === 0) {
+    const error = gl.getError();
+    if (error !== gl.NO_ERROR) gfXRDiagnostics.lastGLError = error;
+  }
+  return true;
+}
+
+function gfPrepareSessionState(isPreview) {
+  saveSettings();
+  previewMode = isPreview;
+  const total = isPreview ? Number(ui.previewLength.value) : getTotalSeconds();
+  plan = compilePlan(total, isPreview);
+  currentPhaseIndex = -1;
+  lastTrainingCueAt = -Infinity;
+  lastWindowCueAt = -Infinity;
+  spokenWindowIds = new Set();
+  running = true;
+  rafId = null;
+
+  ui.stage.classList.add('active');
+  ui.stageJourney.textContent = isPreview
+    ? `${plan.journey.name} · compressed preview`
+    : plan.journey.name;
+  ui.stagePhase.textContent = plan.phases[0].name;
+  ui.stage.style.backgroundColor = '#000';
+
+  // The first XR frame supplies the exact session clock origin.
+  sessionStartedAt = 0;
+  lastSession = {
+    journeyName: plan.journey.name,
+    plannedSeconds: plan.totalSeconds,
+    preview: isPreview,
+    startedAt: new Date().toISOString()
+  };
+}
+
+function gfAdvanceJourney(now) {
+  if (!running || !plan) return false;
+  if (!sessionStartedAt) sessionStartedAt = now;
+
+  const rawElapsed = Math.max(0, (now - sessionStartedAt) / 1000);
+  const behavior = previewMode ? 'stop' : ui.endBehavior.value;
+  const pureContinuous = plan.journeyKey === 'pure' && behavior === 'hold';
+  const reachedEnd = !pureContinuous && rawElapsed >= plan.totalSeconds;
+
+  if (reachedEnd && behavior === 'stop') {
+    finishSession(true);
+    return false;
+  }
+
+  const elapsed = reachedEnd ? Math.max(0, plan.totalSeconds - 0.001) : rawElapsed;
+  const phase = phaseAt(elapsed);
+  if (!phase) return false;
+
+  const phaseT = clamp((elapsed - phase.start) / Math.max(0.001, phase.duration), 0, 1);
+  const activeCue = cueAt(elapsed);
+
+  if (phase.index !== currentPhaseIndex) {
+    currentPhaseIndex = phase.index;
+    lastTrainingCueAt = -Infinity;
+    ui.stagePhase.textContent = phase.name;
+    if (phase.voice) setTimeout(speakIntention, 850);
+  }
+
+  renderVisual(phase, phaseT, rawElapsed, activeCue);
+  renderAudio(phase, phaseT, activeCue);
+  maybeTriggerCues(phase, elapsed, activeCue);
+
+  ui.cueBadge.classList.toggle('active', Boolean(activeCue));
+  if (pureContinuous) {
+    ui.stageClock.textContent = `${formatDuration(rawElapsed, true)} elapsed · continuous`;
+    ui.progressBar.style.width = '0%';
+  } else if (reachedEnd && behavior === 'hold') {
+    ui.stageClock.textContent = `${formatDuration(rawElapsed, true)} elapsed · final phase held`;
+    ui.progressBar.style.width = '100%';
+  } else {
+    const remaining = Math.max(0, plan.totalSeconds - elapsed);
+    ui.stageClock.textContent = `${formatDuration(elapsed, true)} elapsed · ${formatDuration(remaining, true)} remaining`;
+    ui.progressBar.style.width = `${clamp(elapsed / plan.totalSeconds * 100, 0, 100)}%`;
+  }
+
+  return true;
+}
+
+function gfXRFrame(time, xrFrame) {
+  const session = gfXRSession;
+  if (!session || xrFrame.session !== session || !running) return;
+
+  if (gfXRFirstFrameAt === null) {
+    gfXRFirstFrameAt = time;
+    gfXRDiagnostics.firstFrameDelayMs = Math.max(0, performance.now() - gfXRStartedAt);
+  }
+
+  if (!gfAdvanceJourney(time) || !gfXRSession || !running) return;
+
+  let red = gfStageRedLevel();
+  // This visible startup marker makes successful rendering unmistakable.
+  if (time - gfXRFirstFrameAt < 600) red = Math.max(red, 0.85);
+
+  if (gfDrawImmersiveFrame(xrFrame, red)) {
+    gfXRDiagnostics.frames += 1;
+    if (red > 0.02) gfXRDiagnostics.redFrames += 1;
+    else gfXRDiagnostics.blackFrames += 1;
+  }
+
+  if (gfXRSession && running) {
+    gfXRFrameHandle = gfXRSession.requestAnimationFrame(gfXRFrame);
+  }
+}
+
+async function gfOpenXRSession(sessionPromise) {
   gfXRCanvas = document.createElement('canvas');
-  gfXRCanvas.width = 4;
-  gfXRCanvas.height = 4;
+  gfXRCanvas.width = 16;
+  gfXRCanvas.height = 16;
   gfXRCanvas.setAttribute('aria-hidden', 'true');
   gfXRCanvas.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0;pointer-events:none';
   document.body.appendChild(gfXRCanvas);
 
-  const contextOptions = {
+  const options = {
     xrCompatible: true,
     alpha: false,
     antialias: false,
@@ -184,9 +341,8 @@ async function gfOpenXRSession() {
     powerPreference: 'high-performance'
   };
 
-  gfXRGl = gfXRCanvas.getContext('webgl2', contextOptions)
-    || gfXRCanvas.getContext('webgl', contextOptions);
-
+  gfXRGl = gfXRCanvas.getContext('webgl2', options)
+    || gfXRCanvas.getContext('webgl', options);
   if (!gfXRGl) {
     const pending = await sessionPromise;
     try { await pending.end(); } catch (_) {}
@@ -195,8 +351,8 @@ async function gfOpenXRSession() {
 
   const session = await sessionPromise;
   gfXRSession = session;
-
   if (gfXRGl.makeXRCompatible) await gfXRGl.makeXRCompatible();
+  gfCreateRenderer(gfXRGl);
 
   const baseLayer = new XRWebGLLayer(session, gfXRGl, {
     alpha: false,
@@ -207,33 +363,27 @@ async function gfOpenXRSession() {
   });
   session.updateRenderState({ baseLayer });
 
-  if (session.updateTargetFrameRate && session.supportedFrameRates) {
-    const rates = Array.from(session.supportedFrameRates).map(Number).filter(Number.isFinite);
-    gfXRTargetFrameRate = [120, 90, 96, 100]
-      .find(target => rates.some(rate => Math.abs(rate - target) < 0.1)) || null;
-    if (gfXRTargetFrameRate) {
-      try {
-        await session.updateTargetFrameRate(gfXRTargetFrameRate);
-      } catch (_) {
-        gfXRTargetFrameRate = null;
-      }
-    }
-  }
-
   try {
     gfXRReferenceSpace = await session.requestReferenceSpace('local');
   } catch (_) {
     gfXRReferenceSpace = await session.requestReferenceSpace('viewer');
   }
 
-  gfXRFrameCount = 0;
-  gfXRRedFrameCount = 0;
+  if (session.updateTargetFrameRate && session.supportedFrameRates) {
+    const rates = Array.from(session.supportedFrameRates).map(Number).filter(Number.isFinite);
+    gfXRTargetFrameRate = [90, 120, 96, 100]
+      .find(target => rates.some(rate => Math.abs(rate - target) < 0.1)) || null;
+    if (gfXRTargetFrameRate) {
+      try { await session.updateTargetFrameRate(gfXRTargetFrameRate); }
+      catch (_) { gfXRTargetFrameRate = null; }
+    }
+  }
+
   gfXRStartedAt = performance.now();
-  gfSetInitialRed();
-  gfInstallXRAnimationClock();
+  gfXRFirstFrameAt = null;
 
   session.addEventListener('select', () => {
-    // Ignore input that may bleed through from the launch pinch.
+    // Ignore the pinch used to launch the experience.
     if (performance.now() - gfXRStartedAt < 1800) return;
     finishSession(false);
   });
@@ -241,136 +391,104 @@ async function gfOpenXRSession() {
   session.addEventListener('end', () => {
     const shouldFinish = running && !gfXRFinishing;
     gfXRSession = null;
-    gfXRReferenceSpace = null;
-    gfRestoreAnimationClock();
     if (shouldFinish) {
-      finishSession(false, true);
-    } else {
-      gfCleanupXRObjects();
+      gfXRFinishing = true;
+      gfOriginalFinishSession(false)
+        .finally(() => {
+          gfCleanupXR();
+          gfXRFinishing = false;
+          gfSetXRStatus('ready', `${gfDiagnosticSummary()} · Ready for another immersive run.`);
+        });
     }
   }, { once: true });
 
-  // Paint one red bootstrap frame immediately. The application journey loop
-  // takes over on the next XR callback.
-  session.requestAnimationFrame((_, xrFrame) => {
-    if (gfXRSession === session) gfRenderImmersiveFrame(xrFrame);
-  });
-
-  const rateText = gfXRTargetFrameRate ? ` at ${gfXRTargetFrameRate} Hz` : '';
-  gfSetXRStatus('active', `Immersive session active${rateText}. Pinch once anywhere or use the Digital Crown to exit.`);
   return session;
 }
 
-function gfCleanupXRObjects() {
+function gfCleanupXR() {
+  const gl = gfXRGl;
+  if (gl) {
+    try { if (gfXRBuffer) gl.deleteBuffer(gfXRBuffer); } catch (_) {}
+    try { if (gfXRProgram) gl.deleteProgram(gfXRProgram); } catch (_) {}
+  }
+
+  gfXRProgram = null;
+  gfXRBuffer = null;
+  gfXRPositionLocation = -1;
+  gfXRColorLocation = null;
   gfXRReferenceSpace = null;
   gfXRTargetFrameRate = null;
+  gfXRFrameHandle = null;
+  gfXRFirstFrameAt = null;
   gfXRGl = null;
+
   if (gfXRCanvas) {
     try { gfXRCanvas.remove(); } catch (_) {}
   }
   gfXRCanvas = null;
-  gfRestoreAnimationClock();
-}
-
-function gfStartJourneyInsideXR(isPreview) {
-  if (!isPreview && !ensureLaunchAcknowledged()) return false;
-
-  saveSettings();
-  previewMode = isPreview;
-  const total = isPreview ? Number(ui.previewLength.value) : getTotalSeconds();
-  plan = compilePlan(total, isPreview);
-  currentPhaseIndex = -1;
-  lastTrainingCueAt = -Infinity;
-  lastWindowCueAt = -Infinity;
-  spokenWindowIds = new Set();
-
-  running = true;
-  ui.stage.classList.add('active');
-  ui.stageJourney.textContent = isPreview
-    ? `${plan.journey.name} · compressed preview`
-    : plan.journey.name;
-  ui.stagePhase.textContent = plan.phases[0].name;
-  sessionStartedAt = performance.now();
-  lastSession = {
-    journeyName: plan.journey.name,
-    plannedSeconds: plan.totalSeconds,
-    preview: isPreview,
-    startedAt: new Date().toISOString()
-  };
-
-  // Calling frame directly computes the first red/black state immediately and
-  // schedules the continuing loop on the XR session clock.
-  frame(sessionStartedAt);
-  void requestWakeLock();
-  return true;
 }
 
 startSession = async function startSessionWithImmersion(isPreview) {
   if (running || gfXRStarting) return;
-  gfXRStarting = true;
 
-  const wantsAudio = ui.audioProfile.value !== 'silent';
-  const audioWarmup = wantsAudio
-    ? ensureAudio().catch(error => {
-        console.warn('Audio initialization failed:', error);
-        return null;
-      })
-    : Promise.resolve();
+  if (!navigator.xr?.requestSession || gfXRSupported === false) {
+    await gfOriginalStartSession(isPreview);
+    return;
+  }
+
+  gfXRStarting = true;
+  gfResetDiagnostics();
 
   try {
-    await gfOpenXRSession();
-    const started = gfStartJourneyInsideXR(isPreview);
-    if (!started) {
-      const session = gfXRSession;
-      if (session) await session.end();
-      return;
+    // This must be the first privileged call made by the launch click/pinch.
+    const sessionPromise = navigator.xr.requestSession('immersive-vr');
+
+    // Begin audio from the same user gesture, but never let it gate visuals.
+    if (ui.audioProfile.value !== 'silent') {
+      ensureAudio().catch(error => {
+        gfSetXRStatus('error', `Visuals can still run, but audio could not start: ${error?.message || error}`);
+      });
     }
-    // Audio initialization continues independently so it cannot block the first
-    // visual XR frames. It was initiated inside the launch gesture above.
-    void audioWarmup;
+
+    await gfOpenXRSession(sessionPromise);
+    gfPrepareSessionState(isPreview);
+    requestWakeLock().catch(() => {});
+
+    const rateText = gfXRTargetFrameRate ? ` · ${gfXRTargetFrameRate} Hz target` : '';
+    gfSetXRStatus('active', `Immersive renderer active${rateText}. The first 0.6 seconds are solid red, then the selected program begins. Pinch once after launch or use the Digital Crown to exit.`);
+    gfXRFrameHandle = gfXRSession.requestAnimationFrame(gfXRFrame);
   } catch (error) {
     const message = error?.message || String(error);
-    gfSetXRStatus('error', `Immersive launch failed, so window mode started instead: ${message}`);
-
-    const pendingSession = gfXRSession;
+    const pending = gfXRSession;
     gfXRSession = null;
-    try { if (pendingSession) await pendingSession.end(); } catch (_) {}
-    gfCleanupXRObjects();
-
-    await audioWarmup;
+    try { if (pending) await pending.end(); } catch (_) {}
+    gfCleanupXR();
+    gfSetXRStatus('error', `Immersive launch failed; Safari-window mode started instead: ${message}`);
     await gfOriginalStartSession(isPreview);
   } finally {
     gfXRStarting = false;
   }
 };
 
-finishSession = async function finishSessionWithImmersion(naturalEnd = false, fromXREnd = false) {
+finishSession = async function finishSessionWithImmersion(naturalEnd = false) {
   if (gfXRFinishing) return;
+  if (!gfXRSession) {
+    await gfOriginalFinishSession(naturalEnd);
+    return;
+  }
+
   gfXRFinishing = true;
-
   const session = gfXRSession;
+  gfXRSession = null;
+  rafId = null;
+
   try {
-    // Keep the XR session reference alive while the original engine cancels its
-    // XR requestAnimationFrame ID and tears down audio/wake lock state.
     if (running) await gfOriginalFinishSession(naturalEnd);
-
-    if (session && !fromXREnd) {
-      try { await session.end(); } catch (_) {}
-    }
+    try { await session.end(); } catch (_) {}
   } finally {
-    if (gfXRSession === session) gfXRSession = null;
-    gfCleanupXRObjects();
+    gfCleanupXR();
     gfXRFinishing = false;
-
-    if (gfXRSupported) {
-      const diagnostics = gfXRFrameCount
-        ? ` Last run rendered ${gfXRFrameCount} XR frames, including ${gfXRRedFrameCount} red frames.`
-        : '';
-      gfSetXRStatus(
-        'ready',
-        `True immersive WebXR is ready. v8 starts the XR frame loop directly, without DOM fullscreen.${diagnostics}`
-      );
-    }
+    gfSetXRStatus('ready', `${gfDiagnosticSummary()} · Ready for another immersive run.`);
   }
 };
 
@@ -405,15 +523,13 @@ function gfDecorateUI() {
   ui.quickThetaButton.textContent = 'ENTER IMMERSIVE + THETA';
 
   const note = document.querySelector('.quick-note');
-  if (note) {
-    note.textContent = 'v8 fills both eye buffers directly. Pinch once after launch or use the Digital Crown to exit.';
-  }
+  if (note) note.textContent = 'v8 renders a full-field triangle into both Vision Pro eye views on every headset frame. The first 0.6 seconds are solid red. Pinch once after launch or use the Digital Crown to exit.';
 
   const privateNote = document.querySelector('.private-note');
-  if (privateNote) {
-    privateNote.textContent = 'Private experimental build v8 · WebXR black-screen fix · local settings and dream notes';
-  }
+  if (privateNote) privateNote.textContent = 'Private experimental build v8 · dedicated per-eye WebXR renderer · local settings and dream notes';
 }
+
+window.GF_XR_DIAGNOSTICS = () => ({ ...gfXRDiagnostics });
 
 gfDecorateUI();
 gfDetectXR();
