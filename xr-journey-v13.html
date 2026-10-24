@@ -246,7 +246,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <button id="exit" class="stop" disabled>STOP</button>
 <button id="reset" class="danger" disabled>RESET</button>
 </div>
-<p class="small">Inside the headset, pinch anywhere or use the Digital Crown to stop immediately. A static gray "PINCH ANYWHERE TO STOP" label is drawn low in the headset view. The STOP, PAUSE, RESUME and RESET buttons work on this page; they are not expected to be visible inside the immersive view. RESET stops any run in progress, clears elapsed time, pulse phase and last-run statistics, keeps your settings, and does not start a new run. If the headset view is hidden or blurred by the system, the run pauses and only resumes when you press RESUME here. Closing or leaving this page stops the run. The journey never replaces the working XR clock with the ordinary webpage clock.</p>
+<p class="small">Inside the headset, pinch anywhere or use the Digital Crown to stop immediately. The STOP, PAUSE, RESUME and RESET buttons work on this page; they are not expected to be visible inside the immersive view. RESET stops any run in progress, clears elapsed time, pulse phase and last-run statistics, keeps your settings, and does not start a new run. If the headset view is hidden or blurred by the system, the run pauses and only resumes when you press RESUME here. Closing or leaving this page stops the run. The journey never replaces the working XR clock with the ordinary webpage clock.</p>
 <div id="diagnostics" class="diagnostics">No immersive run yet.</div>
 </section>
 </main>
@@ -282,10 +282,6 @@ const WATCHDOG_STALE_MS = 400;
 const AUDIO_START_TIMEOUT_MS = 1500;
 const MIN_HUE_DELTA_DEG = 60;
 const PREFERRED_FRAME_RATES = [90, 120, 96, 100];
-const BADGE_COLOR = [0.06, 0.06, 0.06];
-const BADGE_TEXT = 'PINCH ANYWHERE TO STOP';
-const BADGE_IMAGE_WIDTH = 640;
-const BADGE_IMAGE_HEIGHT = 112;
 const MIN_MINUTES = 5;
 const MAX_MINUTES = 480;
 const PURE_MAX_HZ = 15;
@@ -803,70 +799,6 @@ function createAudio(ctx, options) {
   };
 }
 
-/* ---------- In-headset STOP badge ---------- */
-
-function badgeRect(viewport) {
-  const width = Math.max(1, Math.round(viewport.width * 0.3));
-  const height = Math.max(1, Math.round(width * BADGE_IMAGE_HEIGHT / BADGE_IMAGE_WIDTH));
-  return {
-    x: viewport.x + Math.round((viewport.width - width) / 2),
-    y: viewport.y + Math.round(viewport.height * 0.2),
-    width,
-    height
-  };
-}
-
-function createBadgeRenderer(gl, image) {
-  const none = error => ({ textReady: false, error: error || '', drawText() {} });
-  if (!image) return none('');
-  try {
-    const vsSource = 'attribute vec2 p;varying vec2 v;void main(){v=vec2(p.x*0.5+0.5,0.5-p.y*0.5);gl_Position=vec4(p,0.0,1.0);}';
-    const fsSource = 'precision mediump float;uniform sampler2D t;varying vec2 v;void main(){gl_FragColor=texture2D(t,v);}';
-    const compile = (type, source) => {
-      const shader = gl.createShader(type);
-      gl.shaderSource(shader, source);
-      gl.compileShader(shader);
-      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) throw new Error('badge shader did not compile');
-      return shader;
-    };
-    const program = gl.createProgram();
-    gl.attachShader(program, compile(gl.VERTEX_SHADER, vsSource));
-    gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fsSource));
-    gl.linkProgram(program);
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error('badge program did not link');
-    const buffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
-    const texture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-    const location = gl.getAttribLocation(program, 'p');
-    const sampler = gl.getUniformLocation(program, 't');
-    if (location < 0) throw new Error('badge attribute missing');
-    return {
-      textReady: true,
-      error: '',
-      drawText() {
-        gl.useProgram(program);
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-        gl.enableVertexAttribArray(location);
-        gl.vertexAttribPointer(location, 2, gl.FLOAT, false, 0, 0);
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.uniform1i(sampler, 0);
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-      }
-    };
-  } catch (error) {
-    return none(`badge text: ${errorText(error)}`);
-  }
-}
-
 /* ---------- Run controller: lifecycle, XR loop, audio ownership ---------- */
 
 function createRunController(deps) {
@@ -1112,7 +1044,6 @@ function createRunController(deps) {
       audioTimer: null,
       watchdog: null,
       lastFrameAt: null,
-      badge: null,
       tonesEnabled: cfg.tones,
       volume: cfg.volume,
       lastEval: null
@@ -1217,34 +1148,6 @@ function createRunController(deps) {
     return dt;
   }
 
-  function drawBadge(run, gl, layer, views) {
-    if (!views || !layer || typeof layer.getViewport !== 'function') return;
-    if (!run.badge) {
-      const image = typeof d.createBadgeImage === 'function' ? d.createBadgeImage(BADGE_TEXT) : null;
-      run.badge = createBadgeRenderer(gl, image);
-      if (run.badge.error) run.stats.error = run.badge.error;
-    }
-    for (const view of views) {
-      const viewport = layer.getViewport(view);
-      if (!viewport) continue;
-      const rect = badgeRect(viewport);
-      gl.viewport(rect.x, rect.y, rect.width, rect.height);
-      gl.enable(gl.SCISSOR_TEST);
-      gl.scissor(rect.x, rect.y, rect.width, rect.height);
-      gl.clearColor(BADGE_COLOR[0], BADGE_COLOR[1], BADGE_COLOR[2], 1);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-      if (run.badge.textReady) {
-        try {
-          run.badge.drawText();
-        } catch (error) {
-          run.stats.error = `badge text: ${errorText(error)}`;
-          run.badge = createBadgeRenderer(gl, null);
-        }
-      }
-    }
-    gl.disable(gl.SCISSOR_TEST);
-  }
-
   function renderField(gl, layer, rgb) {
     gl.bindFramebuffer(gl.FRAMEBUFFER, layer.framebuffer);
     gl.disable(gl.SCISSOR_TEST);
@@ -1296,7 +1199,6 @@ function createRunController(deps) {
     }
 
     renderField(gl, layer, rgb);
-    drawBadge(run, gl, layer, pose.views);
 
     if (ev) {
       stats.frames += 1;
@@ -1425,7 +1327,6 @@ function createRunController(deps) {
       multicolor: run.cfg.multicolor,
       paused: state === 'paused',
       lastEval: run.lastEval,
-      badgeText: run.badge ? run.badge.textReady : null,
       lingeringAudio: lingering.size
     };
   }
@@ -1457,10 +1358,6 @@ root.GanzflickerCore = Object.freeze({
   AUDIO_START_TIMEOUT_MS,
   MIN_HUE_DELTA_DEG,
   PREFERRED_FRAME_RATES,
-  BADGE_COLOR,
-  BADGE_TEXT,
-  BADGE_IMAGE_WIDTH,
-  BADGE_IMAGE_HEIGHT,
   MIN_MINUTES,
   MAX_MINUTES,
   JOURNEY,
@@ -1483,8 +1380,6 @@ root.GanzflickerCore = Object.freeze({
   createEngine,
   gainForVolume,
   createAudio,
-  badgeRect,
-  createBadgeRenderer,
   createRunController
 });
 })(globalThis);
@@ -1690,22 +1585,6 @@ stop reason: ${stats.stopReason || stats.endReason || 'n/a'}
 last WebGL error: ${stats.error || 'none'}`;
 }
 
-function createBadgeImage(text) {
-  const canvas = document.createElement('canvas');
-  canvas.width = Core.BADGE_IMAGE_WIDTH;
-  canvas.height = Core.BADGE_IMAGE_HEIGHT;
-  const g = canvas.getContext('2d');
-  if (!g) return null;
-  g.fillStyle = 'rgb(15,15,15)';
-  g.fillRect(0, 0, canvas.width, canvas.height);
-  g.fillStyle = 'rgb(200,200,200)';
-  g.font = '700 40px -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif';
-  g.textAlign = 'center';
-  g.textBaseline = 'middle';
-  g.fillText(text, canvas.width / 2, canvas.height / 2, canvas.width - 32);
-  return canvas;
-}
-
 const controller = Core.createRunController({
   xr: navigator.xr,
   createAudioContext: () => {
@@ -1721,7 +1600,6 @@ const controller = Core.createRunController({
   clearTimeout: handle => window.clearTimeout(handle),
   createWebGLContext: () => document.createElement('canvas').getContext('webgl', { xrCompatible: true, alpha: false }),
   createLayer: (session, gl) => new XRWebGLLayer(session, gl),
-  createBadgeImage,
   onStatus: (channel, kind, text) => {
     if (channel === 'audio') {
       ui.audioStatus.textContent = text;
