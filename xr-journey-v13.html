@@ -1,0 +1,1852 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#050506">
+<meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<!-- Ganzflicker Journey XR v13. Maker: Chen A-004 (Botworker), dispatched by Goldilocks A-002 claude-exec. Successor to v12; v12 is unchanged. -->
+<title>Ganzflicker Journey XR v13</title>
+<style>
+:root{
+  color-scheme:dark;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:#050506;color:#f5f5f7}
+body{padding:24px 24px 118px}
+main{width:min(900px,100%);margin:auto}
+.hero{padding:22px 0 8px}
+h1{font-size:clamp(38px,8vw,70px);letter-spacing:-.055em;margin:0 0 8px}
+.lede{font-size:18px;line-height:1.5;color:#aaaab3;margin:0;max-width:790px}
+.build{display:inline-block;margin-top:12px;padding:7px 10px;border-radius:999px;background:#17171c;border:1px solid #303038;color:#bdbdc6;font-size:13px}
+.panel{margin:18px 0;background:#111115;border:1px solid #303037;border-radius:20px;padding:18px}
+.panel h2{margin:0 0 14px;font-size:22px}
+.status{padding:14px;border-radius:14px;background:#19191f;border:1px solid #383840;line-height:1.45;margin-bottom:15px}
+.status[data-kind="ready"]{border-color:#39694a}
+.status[data-kind="active"]{border-color:#8d3131}
+.status[data-kind="paused"]{border-color:#8a7a2c}
+.status[data-kind="error"]{border-color:#a94a4a}
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mode-card{display:block;background:#19191e;border:1px solid #34343c;border-radius:16px;padding:15px;cursor:pointer}
+.mode-card.selected{border-color:#d4d4db;box-shadow:0 0 0 1px #d4d4db inset}
+.mode-card input{position:absolute;opacity:0;pointer-events:none}
+.mode-kicker{display:block;color:#92929b;font-size:12px;text-transform:uppercase;letter-spacing:.09em;margin-bottom:6px}
+.mode-name{display:block;font-size:19px;font-weight:800;margin-bottom:5px}
+.mode-desc{display:block;color:#aaaab3;line-height:1.4}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field{background:#19191e;border:1px solid #303038;border-radius:15px;padding:14px}
+label.title{display:block;font-weight:720;margin-bottom:8px}
+input[type=range],select,input[type=number]{width:100%}
+select,input[type=number]{background:#25252c;color:#fff;border:1px solid #45454e;border-radius:11px;padding:11px;font-size:16px}
+.row{display:flex;align-items:center;gap:12px}
+.row output{min-width:78px;text-align:right;font-variant-numeric:tabular-nums}
+.preset-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.preset-row button{padding:8px 11px;font-size:14px;background:#28282f;color:#fff;border:1px solid #45454e}
+.timeline{display:flex;height:52px;border-radius:14px;overflow:hidden;border:1px solid #3a3a42;background:#09090b}
+.segment{display:flex;align-items:center;justify-content:center;text-align:center;padding:5px;font-size:11px;font-weight:750;line-height:1.12;border-right:1px solid rgba(255,255,255,.13);min-width:2px}
+.segment:nth-child(odd){background:#471313}
+.segment:nth-child(even){background:#251010}
+.phase-list{margin-top:12px;display:grid;gap:8px}
+.phase-row{display:grid;grid-template-columns:minmax(140px,1.2fr) 90px minmax(220px,2fr);gap:12px;align-items:center;background:#18181d;border:1px solid #303038;border-radius:12px;padding:11px 12px}
+.phase-name{font-weight:750}
+.phase-time{font-variant-numeric:tabular-nums;color:#d0d0d6}
+.phase-detail{color:#9898a2;font-size:13px;line-height:1.35}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+button{appearance:none;border:0;border-radius:999px;padding:15px 18px;font-size:17px;font-weight:800;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+.primary{background:#fff;color:#000}
+.secondary{background:#26262d;color:#fff;border:1px solid #45454e}
+.danger{background:#3a1717;color:#fff;border:1px solid #743232}
+.stop{background:#b3261e;color:#fff;border:2px solid #ff8a80;font-size:20px;letter-spacing:.04em}
+.small{font-size:13px;line-height:1.45;color:#90909a;margin-top:9px}
+.diagnostics{font:600 13px ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;color:#cfcfd5;background:#09090b;border-radius:12px;padding:12px;margin-top:14px}
+.warning{border-color:#a94a4a;background:#1a0f10}
+.warning p{line-height:1.5;margin:0 0 10px}
+.warning a{color:#ffb4ab}
+.ack{display:flex;gap:12px;align-items:flex-start;font-weight:720;line-height:1.4;padding:12px;border-radius:12px;background:#24151a;border:1px solid #6b3434;cursor:pointer}
+.ack input,.check input{width:22px;height:22px;flex:0 0 auto;margin:0}
+.check{display:flex;gap:10px;align-items:center;font-weight:720;cursor:pointer;margin-bottom:8px}
+.audio-status{margin-top:10px;font-size:13px;line-height:1.45;color:#cfcfd5}
+.launch-dock{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:20;width:min(860px,calc(100% - 32px));display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 14px;background:rgba(16,16,20,.94);backdrop-filter:blur(20px);border:1px solid #3a3a43;border-radius:20px;box-shadow:0 18px 60px rgba(0,0,0,.55)}
+.dock-copy{min-width:0}
+.dock-title{font-weight:800}
+.dock-detail{color:#9797a1;font-size:13px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dock-buttons{display:flex;gap:10px;flex:0 0 auto}
+.launch-dock button{flex:0 0 auto;padding:13px 18px}
+@media(max-width:700px){
+  body{padding:16px 16px 186px}
+  .grid,.mode-grid,.actions{grid-template-columns:1fr}
+  .phase-row{grid-template-columns:1fr}
+  .phase-detail{margin-top:-4px}
+  .launch-dock{align-items:stretch;flex-direction:column}
+  .dock-buttons{flex-direction:column}
+  .launch-dock button{width:100%}
+}
+</style>
+</head>
+<body>
+<main>
+<section class="hero">
+<h1>Ganzflicker Journey XR</h1>
+<p class="lede">The working Vision Pro frame engine, now with a proportional visual journey that continuously changes flicker frequency, red intensity, duty cycle, and pacing.</p>
+<div class="build">Private build v13 · frame-delta engine preserved from working v11 and v12</div>
+</section>
+
+<section class="panel warning" id="safetyPanel">
+<h2>Photosensitivity warning</h2>
+<p>This app flashes light across your whole field of view. Flashing lights, rapidly changing colors, high contrast and a large field of view (as in a headset) can trigger seizures in people with photosensitive epilepsy, including people who have never had one.</p>
+<p>No rapid-flash setting here has been established as safe. Multicolor mode is not a safety improvement. Stop immediately if you feel unwell.</p>
+<p>More information: <a href="https://www.epilepsy.com/what-is-epilepsy/seizure-triggers/photosensitivity" target="_blank" rel="noopener">Epilepsy Foundation: photosensitivity and seizures</a></p>
+<label class="ack" for="ack"><input id="ack" type="checkbox"> <span>I have read this warning and understand the risk. Launch stays disabled until this box is checked.</span></label>
+</section>
+
+<section class="panel">
+<div id="status" class="status" data-kind="checking">Checking immersive WebXR support…</div>
+<h2>Choose the experience</h2>
+<div class="mode-grid">
+<label class="mode-card selected" data-mode="journey">
+<input type="radio" name="experience" value="journey" checked>
+<span class="mode-kicker">Programmed journey</span>
+<span class="mode-name">Frequency Odyssey</span>
+<span class="mode-desc">An evolving arc through red immersion, faster gates, descending frequencies, deep pulses, a sparse void beacon, and a measured return.</span>
+</label>
+<label class="mode-card" data-mode="pure">
+<input type="radio" name="experience" value="pure">
+<span class="mode-kicker">Direct mode</span>
+<span class="mode-name">Pure Ganzflicker</span>
+<span class="mode-desc">One constant frequency, intensity, and duty cycle. This preserves the exact v11 behavior that worked.</span>
+</label>
+</div>
+</section>
+
+<section class="panel" id="lengthPanel">
+<h2>Length and ending</h2>
+<div class="grid">
+<div class="field">
+<label class="title" for="duration">Total length</label>
+<div class="row">
+<input id="duration" type="number" min="5" max="480" step="1" value="45">
+<output id="durationOut">45 min</output>
+</div>
+<div class="preset-row">
+<button type="button" data-minutes="10">10m</button>
+<button type="button" data-minutes="20">20m</button>
+<button type="button" data-minutes="30">30m</button>
+<button type="button" data-minutes="45">45m</button>
+<button type="button" data-minutes="60">1h</button>
+<button type="button" data-minutes="90">90m</button>
+<button type="button" data-minutes="120">2h</button>
+<button type="button" data-minutes="240">4h</button>
+<button type="button" data-minutes="480">8h</button>
+</div>
+<div class="small">Applies to Frequency Odyssey, and to Pure Ganzflicker when its session length is Timed.</div>
+</div>
+<div class="field">
+<label class="title" for="endBehavior">At the end</label>
+<select id="endBehavior">
+<option value="exit" selected>Exit immersion automatically</option>
+<option value="loop">Loop the full journey</option>
+<option value="hold">Hold the final dim-red phase</option>
+</select>
+<div class="small">Every phase expands or contracts proportionately to the selected total time. For timed Pure, loop and hold both keep the same pulse running; exit ends the session.</div>
+<div class="small">Frequency Odyssey: hold stays in the final dim steady-red phase. Timed Pure: hold keeps flashing indefinitely at your Pure settings, with no dim-red phase.</div>
+</div>
+</div>
+</section>
+
+<section class="panel" id="journeyPanel">
+<h2>Journey design</h2>
+<div class="grid">
+<div class="field">
+<label class="title" for="journeyScale">Journey intensity</label>
+<div class="row">
+<input id="journeyScale" type="range" min="30" max="100" step="1" value="85">
+<output id="journeyScaleOut">85%</output>
+</div>
+<div class="small">Scales all programmed red intensities without changing the journey’s frequency path.</div>
+</div>
+<div class="field">
+<label class="title">Program behavior</label>
+<div>Frequency sweeps: 10 → 8 → 6 → 4.2 → 1.6 → 7.5 Hz</div>
+<div class="small">Duty cycle and intensity evolve independently, with one sparse low-frequency integration phase.</div>
+</div>
+</div>
+</section>
+
+<section class="panel" id="purePanel" hidden>
+<h2>Pure Ganzflicker settings</h2>
+<div class="grid">
+<div class="field">
+<label class="title" for="frequency">Frequency</label>
+<div class="row"><input id="frequency" type="range" min="1" max="15" step="0.5" value="7.5"><output id="frequencyOut">7.5 Hz</output></div>
+</div>
+<div class="field">
+<label class="title" for="intensity">Red intensity</label>
+<div class="row"><input id="intensity" type="range" min="10" max="100" step="1" value="100"><output id="intensityOut">100%</output></div>
+</div>
+<div class="field">
+<label class="title" for="duty">Red duty cycle</label>
+<div class="row"><input id="duty" type="range" min="10" max="90" step="5" value="50"><output id="dutyOut">50%</output></div>
+</div>
+<div class="field">
+<label class="title" for="pureLength">Session length</label>
+<select id="pureLength">
+<option value="continuous" selected>Continuous (original v12 behavior)</option>
+<option value="timed">Timed (uses Length and ending above)</option>
+</select>
+<div class="small">Continuous runs until you stop it. At 90 Hz and 7.5 Hz, the default cadence is six red frames followed by six black frames.</div>
+</div>
+</div>
+</section>
+
+<section class="panel" id="effectsPanel">
+<h2>Optional effects and comfort controls</h2>
+<div class="grid">
+<div class="field">
+<label class="check" for="tones"><input id="tones" type="checkbox"> Stereo tones</label>
+<div class="row"><input id="volume" type="range" min="0" max="100" step="1" value="20" aria-label="Stereo tone volume"><output id="volumeOut">20%</output></div>
+<div class="small">Off by default. Headphones are required for stereo separation: the left ear hears 200 Hz minus half the current flicker rate and the right ear hears 200 Hz plus half, so the left/right difference equals the flicker rate used for that frame. Carrier 200 Hz. Gain ceiling 0.12 (about -18.4 dBFS per channel peak) at 100% volume. Tones are silent during steady phases, the solid diagnostic, pause and stop. In the Void Beacon phase the difference is 0.16 to 0.32 Hz, below typical perceptible binaural beat rates.</div>
+<div class="small">These tones are an audio effect only. They do not establish brain entrainment or any therapeutic or medical benefit.</div>
+<div id="audioStatus" class="audio-status">Stereo tones are off.</div>
+</div>
+<div class="field">
+<label class="check" for="multicolor"><input id="multicolor" type="checkbox"> Random multicolor flashes</label>
+<div class="small">Off by default. Applies to Frequency Odyssey and Pure only; the 1 Hz test, the solid diagnostic and steady red phases stay red. Each flash gets a new random hue, held for the whole flash, at least 60 degrees from the previous hue. Each color is scaled by formula so its relative luminance does not exceed the original red frame at the same intensity, so many hues look dimmer. This is a formula match, not a measured display output, and it is not a safety measure.</div>
+</div>
+<div class="field">
+<label class="title" for="brightness">Overall brightness</label>
+<div class="row"><input id="brightness" type="range" min="10" max="100" step="1" value="100"><output id="brightnessOut">100%</output></div>
+<div class="small">Multiplies the programmed level in every mode, red or color. 100% matches v12.</div>
+</div>
+<div class="field">
+<label class="title" for="floor">Dark-phase floor</label>
+<div class="row"><input id="floor" type="range" min="0" max="30" step="1" value="0"><output id="floorOut">0%</output></div>
+<div class="small">Lowers contrast between flash and dark phase. It does not make flashing safe. The dark half of each cycle shows the current flash color at this fraction of the flash level instead of black. 0% matches v12.</div>
+</div>
+</div>
+</section>
+
+<section class="panel" id="mapPanel">
+<h2>Journey map</h2>
+<div id="timeline" class="timeline"></div>
+<div id="phaseList" class="phase-list"></div>
+</section>
+
+<section class="panel">
+<h2>Launch</h2>
+<div class="actions">
+<button id="enter" class="primary" disabled>ENTER FREQUENCY ODYSSEY</button>
+<button id="pureLaunch" class="secondary" disabled>ENTER PURE 7.5 HZ</button>
+<button id="slowTest" class="secondary" disabled>ENTER 1 HZ TEST</button>
+<button id="solidTest" class="secondary" disabled>ENTER SOLID RED DIAGNOSTIC</button>
+<button id="pause" class="secondary" disabled>PAUSE</button>
+<button id="resume" class="secondary" disabled>RESUME</button>
+<button id="exit" class="stop" disabled>STOP</button>
+<button id="reset" class="danger" disabled>RESET</button>
+</div>
+<p class="small">Inside the headset, pinch anywhere or use the Digital Crown to stop immediately. A static gray "PINCH ANYWHERE TO STOP" label is drawn low in the headset view. The STOP, PAUSE, RESUME and RESET buttons work on this page; they are not expected to be visible inside the immersive view. RESET stops any run in progress, clears elapsed time, pulse phase and last-run statistics, keeps your settings, and does not start a new run. If the headset view is hidden or blurred by the system, the run pauses and only resumes when you press RESUME here. Closing or leaving this page stops the run. The journey never replaces the working XR clock with the ordinary webpage clock.</p>
+<div id="diagnostics" class="diagnostics">No immersive run yet.</div>
+</section>
+</main>
+
+<div class="launch-dock">
+<div class="dock-copy">
+<div id="dockTitle" class="dock-title">Frequency Odyssey</div>
+<div id="dockDetail" class="dock-detail">45 minutes · evolving frequency, intensity, and duty cycle</div>
+</div>
+<div class="dock-buttons">
+<button id="dockLaunch" class="primary" disabled>ENTER JOURNEY</button>
+<button id="dockStop" class="stop" disabled>STOP</button>
+</div>
+</div>
+
+<script id="gf-core">
+/* Ganzflicker Journey XR v13 core. Maker: Chen A-004.
+   Pure engine and controllers with injected dependencies. No DOM access.
+   Assigns exactly one global, GanzflickerCore. Inert until the page script calls it. */
+(function (root) {
+'use strict';
+
+const VERSION = 'v13';
+const CARRIER_HZ = 200;
+const MAX_GAIN = 0.12;
+const DEFAULT_VOLUME = 0.2;
+const FADE_IN_S = 1.5;
+const FADE_OUT_S = 0.25;
+const FREQ_TIME_CONSTANT_S = 0.02;
+const VOLUME_RAMP_S = 0.05;
+const WATCHDOG_INTERVAL_MS = 250;
+const WATCHDOG_STALE_MS = 400;
+const AUDIO_START_TIMEOUT_MS = 1500;
+const MIN_HUE_DELTA_DEG = 60;
+const PREFERRED_FRAME_RATES = [90, 120, 96, 100];
+const BADGE_COLOR = [0.06, 0.06, 0.06];
+const BADGE_TEXT = 'PINCH ANYWHERE TO STOP';
+const BADGE_IMAGE_WIDTH = 640;
+const BADGE_IMAGE_HEIGHT = 112;
+const MIN_MINUTES = 5;
+const MAX_MINUTES = 480;
+const PURE_MAX_HZ = 15;
+
+const clamp = (value, minimum, maximum) => Math.min(maximum, Math.max(minimum, value));
+const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = t => t * t * (3 - 2 * t);
+const errorText = error => (error && error.message) || String(error);
+const num = (value, fallback) => {
+  const parsed = Number(value);
+  return value !== null && value !== '' && Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const JOURNEY = Object.freeze([
+  {
+    name: 'Red Arrival',
+    weight: 0.07,
+    mode: 'solid',
+    intensityA: 0.12,
+    intensityB: 0.55,
+    breatheHz: 0.06,
+    detail: 'Steady red rises slowly, with a barely perceptible brightness breath.'
+  },
+  {
+    name: 'Alpha Gate',
+    weight: 0.13,
+    mode: 'flicker',
+    hzA: 10,
+    hzB: 8,
+    intensityA: 0.55,
+    intensityB: 0.95,
+    dutyA: 0.62,
+    dutyB: 0.50,
+    detail: 'The field opens at a faster rate while red intensity builds toward its peak.'
+  },
+  {
+    name: 'Theta Descent',
+    weight: 0.18,
+    mode: 'flicker',
+    hzA: 8,
+    hzB: 6,
+    intensityA: 0.95,
+    intensityB: 0.78,
+    dutyA: 0.50,
+    dutyB: 0.44,
+    detail: 'Frequency glides downward while the red phase narrows and softens.'
+  },
+  {
+    name: 'Deep Theta',
+    weight: 0.18,
+    mode: 'flicker',
+    hzA: 6,
+    hzB: 4.2,
+    intensityA: 0.78,
+    intensityB: 0.62,
+    dutyA: 0.44,
+    dutyB: 0.58,
+    breatheHz: 0.035,
+    detail: 'Slower pulses broaden, with a long low-amplitude brightness wave underneath.'
+  },
+  {
+    name: 'Pulse Field',
+    weight: 0.14,
+    mode: 'flicker',
+    hzA: 4.2,
+    hzB: 1.6,
+    intensityA: 0.62,
+    intensityB: 0.36,
+    dutyA: 0.58,
+    dutyB: 0.28,
+    detail: 'The rhythm becomes sparse and unmistakable as frequency and red exposure both fall.'
+  },
+  {
+    name: 'Void Beacon',
+    weight: 0.12,
+    mode: 'flicker',
+    hzA: 0.16,
+    hzB: 0.32,
+    intensityA: 0.15,
+    intensityB: 0.28,
+    dutyA: 0.10,
+    dutyB: 0.18,
+    breatheHz: 0.025,
+    detail: 'Mostly darkness, interrupted by brief dim-red beacons every few seconds.'
+  },
+  {
+    name: 'Return Arc',
+    weight: 0.12,
+    mode: 'flicker',
+    hzA: 2,
+    hzB: 7.5,
+    intensityA: 0.34,
+    intensityB: 0.76,
+    dutyA: 0.30,
+    dutyB: 0.50,
+    detail: 'Frequency, brightness, and red exposure rise together toward the familiar 7.5 Hz field.'
+  },
+  {
+    name: 'Red Landing',
+    weight: 0.06,
+    mode: 'solid',
+    intensityA: 0.38,
+    intensityB: 0.08,
+    breatheHz: 0.04,
+    detail: 'Flicker resolves into dim steady red before the session exits, loops, or holds.'
+  }
+].map(phase => Object.freeze(phase)));
+
+function compileJourney(totalMs) {
+  let cursor = 0;
+  return JOURNEY.map((source, index) => {
+    const durationMs = totalMs * source.weight;
+    const phase = {
+      ...source,
+      index,
+      startMs: cursor,
+      durationMs,
+      endMs: cursor + durationMs
+    };
+    cursor += durationMs;
+    return phase;
+  });
+}
+
+function breatheMultiplier(phase, elapsedSeconds) {
+  if (!phase.breatheHz) return 1;
+  return 0.88 + 0.12 * (0.5 + 0.5 * Math.sin(elapsedSeconds * Math.PI * 2 * phase.breatheHz));
+}
+
+/* ---------- Color: sRGB transfer, hue, luminance cap ---------- */
+
+function srgbToLinear(c) {
+  const v = clamp(c, 0, 1);
+  return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+}
+
+function linearToSrgb(l) {
+  const v = clamp(l, 0, 1);
+  return v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055;
+}
+
+function relativeLuminance(rgb) {
+  return 0.2126 * srgbToLinear(rgb[0]) + 0.7152 * srgbToLinear(rgb[1]) + 0.0722 * srgbToLinear(rgb[2]);
+}
+
+/* Fully saturated hue (HSV s=1, v=1) interpreted as linear RGB. */
+function hueToLinearRgb(hueDeg) {
+  const h = ((hueDeg % 360) + 360) % 360;
+  const x = 1 - Math.abs(((h / 60) % 2) - 1);
+  if (h < 60) return [1, x, 0];
+  if (h < 120) return [x, 1, 0];
+  if (h < 180) return [0, 1, x];
+  if (h < 240) return [0, x, 1];
+  if (h < 300) return [x, 0, 1];
+  return [1, 0, x];
+}
+
+/* Returns sRGB [r,g,b] for clearColor. Relative luminance is capped at the
+   original red frame's luminance at the same programmed level, and every
+   linear channel is capped at 1. A formula match, not a display measurement. */
+function luminanceCappedColor(hueDeg, level) {
+  const programmed = clamp(Number(level) || 0, 0, 1);
+  const yRed = 0.2126 * srgbToLinear(programmed);
+  if (yRed <= 0) return [0, 0, 0];
+  const base = hueToLinearRgb(hueDeg);
+  const y = 0.2126 * base[0] + 0.7152 * base[1] + 0.0722 * base[2];
+  const maxChannel = Math.max(base[0], base[1], base[2]);
+  const k = Math.min(yRed / y, 1 / maxChannel);
+  return base.map(channel => clamp(linearToSrgb(channel * k), 0, 1));
+}
+
+/* hue === null means original red, exactly as v12: clearColor(level, 0, 0, 1). */
+function colorForFlash(hueDeg, level) {
+  if (hueDeg === null || hueDeg === undefined) return [clamp(Number(level) || 0, 0, 1), 0, 0];
+  return luminanceCappedColor(hueDeg, level);
+}
+
+function hueDistance(a, b) {
+  const d = Math.abs((((a - b) % 360) + 360) % 360);
+  return Math.min(d, 360 - d);
+}
+
+/* New hue at least MIN_HUE_DELTA_DEG (circular) from the previous one. */
+function nextHue(previousHue, r) {
+  const u = clamp(Number(r) || 0, 0, 0.999999999);
+  if (previousHue === null || previousHue === undefined) return u * 360;
+  return (previousHue + MIN_HUE_DELTA_DEG + u * (360 - 2 * MIN_HUE_DELTA_DEG)) % 360;
+}
+
+/* ---------- Configuration ---------- */
+
+function normalizeConfig(raw) {
+  const source = raw || {};
+  const mode = ['journey', 'pure', 'slow', 'solid'].includes(source.mode) ? source.mode : 'journey';
+  const minutes = clamp(Number(source.minutes) || 45, MIN_MINUTES, MAX_MINUTES);
+  const totalMs = minutes * 60000;
+  const slow = mode === 'slow';
+  return {
+    mode,
+    minutes,
+    totalMs,
+    phases: compileJourney(totalMs),
+    scale: clamp(num(source.scale, 0.85), 0.3, 1),
+    endBehavior: ['exit', 'loop', 'hold'].includes(source.endBehavior) ? source.endBehavior : 'exit',
+    frequency: slow ? 1 : Math.min(PURE_MAX_HZ, Math.max(0.1, Number(source.frequency) || 7.5)),
+    intensity: clamp(num(source.intensity, 1), 0.1, 1),
+    duty: slow ? 0.5 : clamp(num(source.duty, 0.5), 0.01, 0.99),
+    pureTimed: mode === 'pure' && source.pureTimed === true,
+    multicolor: source.multicolor === true && (mode === 'journey' || mode === 'pure'),
+    brightness: clamp(num(source.brightness, 1), 0.1, 1),
+    floor: clamp(num(source.floor, 0), 0, 0.3),
+    tones: source.tones === true,
+    volume: clamp(num(source.volume, DEFAULT_VOLUME), 0, 1)
+  };
+}
+
+/* r2 correction 2: the shared end option describes what each mode actually does.
+   Labels only; the engine's end behavior is unchanged. Timed Pure hold has no
+   dim-red phase: it keeps the selected pulse, colors and tones running. */
+const END_LABELS = Object.freeze({
+  journey: Object.freeze({
+    exit: 'Exit immersion automatically',
+    loop: 'Loop the full journey',
+    hold: 'Hold the final dim-red phase'
+  }),
+  pure: Object.freeze({
+    exit: 'Timed Pure: exit immersion at the end',
+    loop: 'Timed Pure: restart the timer and keep flashing',
+    hold: 'Timed Pure: keep flashing indefinitely (no dim-red phase)'
+  })
+});
+
+function endBehaviorLabel(mode, value) {
+  const set = END_LABELS[mode === 'pure' ? 'pure' : 'journey'];
+  return set[value] || set.exit;
+}
+
+/* ---------- Engine: the single per-frame evaluator ---------- */
+
+function createEngine(rawConfig, deps) {
+  const cfg = rawConfig && rawConfig.phases && rawConfig.totalMs ? rawConfig : normalizeConfig(rawConfig);
+  const random = deps && typeof deps.random === 'function' ? deps.random : Math.random;
+  const colorful = cfg.multicolor && (cfg.mode === 'journey' || cfg.mode === 'pure');
+  const s = {
+    elapsedMs: 0,
+    phasePosition: 0,
+    activePhaseIndex: -1,
+    completedLoops: 0,
+    phaseChanges: 0,
+    phaseNames: [],
+    ended: false,
+    hue: null,
+    lastFlashHue: null,
+    prevLit: false
+  };
+
+  function endedEval(phaseIndex) {
+    return {
+      level: 0, programmedLevel: 0, on: false, hz: null, programmedHz: null,
+      solid: false, phaseIndex, onset: false, ended: true, hue: null, rgb: [0, 0, 0]
+    };
+  }
+
+  /* Hue follows the rendered sequence, not the pulse arithmetic (r2 correction 1).
+     Each step is one rendered frame. A flash starts only on a lit flicker sample
+     whose previous rendered sample was unlit (pulse off). The run begins unlit,
+     so the first lit flicker sample of a run is the initial flash. A phase wrap,
+     phase reset or loop while the field stays lit is not a new flash. A steady
+     red sample is displayed red, so a flash that continues straight out of a
+     steady phase stays red until the next off-to-on transition. Dark-phase
+     floor samples are unlit and only display the held hue. */
+  function output(r) {
+    const programmedLevel = clamp(r.programmed * cfg.brightness, 0, 1);
+    const lit = r.solid || r.on;
+    const flashStart = lit && !r.solid && !s.prevLit;
+    s.prevLit = lit;
+    if (colorful) {
+      if (r.solid) s.hue = null;
+      else if (flashStart) {
+        s.hue = nextHue(s.lastFlashHue, random());
+        s.lastFlashHue = s.hue;
+      }
+    }
+    const level = (r.solid || r.on) ? programmedLevel : programmedLevel * cfg.floor;
+    const hue = colorful && !r.solid ? s.hue : null;
+    return {
+      level,
+      programmedLevel,
+      on: r.on,
+      hz: r.solid ? null : r.hz,
+      programmedHz: r.solid ? null : r.hz,
+      solid: r.solid,
+      phaseIndex: r.phaseIndex,
+      onset: flashStart,
+      ended: false,
+      hue,
+      rgb: colorForFlash(hue, level)
+    };
+  }
+
+  function pulse(dt, hz, duty) {
+    const advanced = s.phasePosition + (dt / 1000) * hz;
+    s.phasePosition = advanced % 1;
+    return s.phasePosition < duty;
+  }
+
+  function journeyStep(dt) {
+    const totalMs = cfg.totalMs;
+    s.elapsedMs += dt;
+    let ended = false;
+    if (s.elapsedMs >= totalMs) {
+      if (cfg.endBehavior === 'loop') {
+        s.elapsedMs %= totalMs;
+        s.activePhaseIndex = -1;
+        s.phasePosition = 0;
+        s.completedLoops += 1;
+      } else if (cfg.endBehavior === 'hold') {
+        s.elapsedMs = totalMs - 0.001;
+      } else {
+        s.elapsedMs = totalMs - 0.001;
+        ended = true;
+      }
+    }
+
+    const phase = cfg.phases.find(item =>
+      s.elapsedMs >= item.startMs && s.elapsedMs < item.endMs
+    ) || cfg.phases[cfg.phases.length - 1];
+
+    if (phase.index !== s.activePhaseIndex) {
+      s.activePhaseIndex = phase.index;
+      s.phasePosition = 0;
+      s.phaseChanges += 1;
+      s.phaseNames.push(phase.name);
+    }
+
+    if (ended) {
+      s.ended = true;
+      return endedEval(phase.index);
+    }
+
+    const phaseT = clamp((s.elapsedMs - phase.startMs) / Math.max(1, phase.durationMs), 0, 1);
+    const eased = smooth(phaseT);
+    const elapsedSeconds = s.elapsedMs / 1000;
+
+    let intensity = lerp(phase.intensityA, phase.intensityB, eased) * cfg.scale;
+    intensity *= breatheMultiplier(phase, elapsedSeconds);
+    intensity = clamp(intensity, 0, 1);
+
+    if (phase.mode === 'solid') {
+      return output({ programmed: intensity, on: true, hz: null, solid: true, phaseIndex: phase.index });
+    }
+
+    const hz = Math.max(0.05, lerp(phase.hzA, phase.hzB, eased));
+    const duty = clamp(lerp(phase.dutyA, phase.dutyB, eased), 0.01, 0.99);
+    const on = pulse(dt, hz, duty);
+    return output({ programmed: intensity, on, hz, solid: false, phaseIndex: phase.index });
+  }
+
+  function directStep(dt) {
+    s.elapsedMs += dt;
+    if (cfg.mode === 'pure' && cfg.pureTimed && s.elapsedMs >= cfg.totalMs) {
+      if (cfg.endBehavior === 'loop') {
+        s.elapsedMs %= cfg.totalMs;
+        s.completedLoops += 1;
+      } else if (cfg.endBehavior === 'hold') {
+        s.elapsedMs = cfg.totalMs - 0.001;
+      } else {
+        s.elapsedMs = cfg.totalMs - 0.001;
+        s.ended = true;
+        return endedEval(-1);
+      }
+    }
+    const level = cfg.intensity;
+    if (cfg.mode === 'solid') {
+      return output({ programmed: level, on: true, hz: null, solid: true, phaseIndex: -1 });
+    }
+    const hz = cfg.mode === 'slow' ? 1 : cfg.frequency;
+    const duty = cfg.mode === 'slow' ? 0.5 : cfg.duty;
+    const on = pulse(dt, hz, duty);
+    return output({ programmed: level, on, hz, solid: false, phaseIndex: -1 });
+  }
+
+  function step(dt) {
+    if (s.ended) return endedEval(s.activePhaseIndex);
+    return cfg.mode === 'journey' ? journeyStep(dt) : directStep(dt);
+  }
+
+  function getState() {
+    return {
+      elapsedMs: s.elapsedMs,
+      phasePosition: s.phasePosition,
+      activePhaseIndex: s.activePhaseIndex,
+      completedLoops: s.completedLoops,
+      phaseChanges: s.phaseChanges,
+      phaseNames: s.phaseNames.slice(),
+      ended: s.ended,
+      hue: s.hue
+    };
+  }
+
+  return { config: cfg, step, getState };
+}
+
+/* ---------- Audio: one owned graph per run ---------- */
+
+function gainForVolume(volume) {
+  return Math.min(MAX_GAIN, clamp(Number(volume) || 0, 0, 1) * MAX_GAIN);
+}
+
+function createAudio(ctx, options) {
+  let volume = clamp(num(options && options.volume, DEFAULT_VOLUME), 0, 1);
+  const t0 = ctx.currentTime;
+  const left = ctx.createOscillator();
+  const right = ctx.createOscillator();
+  left.type = 'sine';
+  right.type = 'sine';
+  left.frequency.setValueAtTime(CARRIER_HZ, t0);
+  right.frequency.setValueAtTime(CARRIER_HZ, t0);
+  const merger = ctx.createChannelMerger(2);
+  const master = ctx.createGain();
+  master.gain.setValueAtTime(0, t0);
+  left.connect(merger, 0, 0);
+  right.connect(merger, 0, 1);
+  merger.connect(master);
+  master.connect(ctx.destination);
+
+  let started = false;
+  let destroyed = false;
+  let gainOn = false;
+  let targetGain = 0;
+  let freqInit = false;
+  let leftHz = CARRIER_HZ;
+  let rightHz = CARRIER_HZ;
+  let lastHz = null;
+
+  function rampGain(target, seconds) {
+    const g = master.gain;
+    const t = ctx.currentTime;
+    const goal = clamp(target, 0, MAX_GAIN);
+    const from = clamp(Number(g.value) || 0, 0, MAX_GAIN);
+    g.cancelScheduledValues(t);
+    g.setValueAtTime(from, t);
+    g.linearRampToValueAtTime(goal, t + seconds);
+    targetGain = goal;
+  }
+
+  return {
+    start() {
+      if (started || destroyed) return;
+      left.start();
+      right.start();
+      started = true;
+    },
+    update(hz, audible) {
+      if (!started || destroyed) return;
+      const t = ctx.currentTime;
+      if (audible && Number.isFinite(hz)) {
+        const l = CARRIER_HZ - hz / 2;
+        const r = CARRIER_HZ + hz / 2;
+        if (!freqInit) {
+          left.frequency.setValueAtTime(l, t);
+          right.frequency.setValueAtTime(r, t);
+          freqInit = true;
+        } else if (l !== leftHz || r !== rightHz) {
+          left.frequency.setTargetAtTime(l, t, FREQ_TIME_CONSTANT_S);
+          right.frequency.setTargetAtTime(r, t, FREQ_TIME_CONSTANT_S);
+        }
+        leftHz = l;
+        rightHz = r;
+        lastHz = hz;
+        if (!gainOn) {
+          rampGain(gainForVolume(volume), FADE_IN_S);
+          gainOn = true;
+        }
+      } else if (gainOn) {
+        rampGain(0, FADE_OUT_S);
+        gainOn = false;
+      }
+    },
+    fadeOut() {
+      if (destroyed) return;
+      if (gainOn || targetGain > 0) rampGain(0, FADE_OUT_S);
+      gainOn = false;
+    },
+    mute() {
+      if (destroyed) return;
+      const t = ctx.currentTime;
+      master.gain.cancelScheduledValues(t);
+      master.gain.setValueAtTime(0, t);
+      targetGain = 0;
+      gainOn = false;
+    },
+    setVolume(next) {
+      volume = clamp(num(next, volume), 0, 1);
+      if (gainOn && !destroyed) rampGain(gainForVolume(volume), VOLUME_RAMP_S);
+    },
+    isAudible() {
+      return gainOn && !destroyed;
+    },
+    destroy() {
+      if (destroyed) return;
+      this.mute();
+      destroyed = true;
+      if (started) {
+        try { left.stop(); } catch (_) {}
+        try { right.stop(); } catch (_) {}
+      }
+      [left, right, merger, master].forEach(node => {
+        try { node.disconnect(); } catch (_) {}
+      });
+    },
+    info() {
+      return { started, destroyed, gainOn, targetGain, leftHz, rightHz, lastHz, volume };
+    }
+  };
+}
+
+/* ---------- In-headset STOP badge ---------- */
+
+function badgeRect(viewport) {
+  const width = Math.max(1, Math.round(viewport.width * 0.3));
+  const height = Math.max(1, Math.round(width * BADGE_IMAGE_HEIGHT / BADGE_IMAGE_WIDTH));
+  return {
+    x: viewport.x + Math.round((viewport.width - width) / 2),
+    y: viewport.y + Math.round(viewport.height * 0.2),
+    width,
+    height
+  };
+}
+
+function createBadgeRenderer(gl, image) {
+  const none = error => ({ textReady: false, error: error || '', drawText() {} });
+  if (!image) return none('');
+  try {
+    const vsSource = 'attribute vec2 p;varying vec2 v;void main(){v=vec2(p.x*0.5+0.5,0.5-p.y*0.5);gl_Position=vec4(p,0.0,1.0);}';
+    const fsSource = 'precision mediump float;uniform sampler2D t;varying vec2 v;void main(){gl_FragColor=texture2D(t,v);}';
+    const compile = (type, source) => {
+      const shader = gl.createShader(type);
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) throw new Error('badge shader did not compile');
+      return shader;
+    };
+    const program = gl.createProgram();
+    gl.attachShader(program, compile(gl.VERTEX_SHADER, vsSource));
+    gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fsSource));
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error('badge program did not link');
+    const buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+    const location = gl.getAttribLocation(program, 'p');
+    const sampler = gl.getUniformLocation(program, 't');
+    if (location < 0) throw new Error('badge attribute missing');
+    return {
+      textReady: true,
+      error: '',
+      drawText() {
+        gl.useProgram(program);
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.enableVertexAttribArray(location);
+        gl.vertexAttribPointer(location, 2, gl.FLOAT, false, 0, 0);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.uniform1i(sampler, 0);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      }
+    };
+  } catch (error) {
+    return none(`badge text: ${errorText(error)}`);
+  }
+}
+
+/* ---------- Run controller: lifecycle, XR loop, audio ownership ---------- */
+
+function createRunController(deps) {
+  const d = deps || {};
+  const now = typeof d.now === 'function' ? d.now : () => Date.now();
+  const random = typeof d.random === 'function' ? d.random : Math.random;
+  let state = 'idle';
+  let runId = 0;
+  let current = null;
+  let lastRun = null;
+  const lingering = new Set();
+
+  const setState = next => {
+    state = next;
+    if (d.onState) { try { d.onState(next); } catch (_) {} }
+  };
+  const status = (channel, kind, text) => {
+    if (d.onStatus) { try { d.onStatus(channel, kind, text); } catch (_) {} }
+  };
+  const isCurrent = run => !!run && run === current && run.id === runId && !run.cancelled;
+  const endQuietly = session => {
+    try {
+      const result = session && session.end();
+      if (result && typeof result.catch === 'function') result.catch(() => {});
+    } catch (_) {}
+  };
+  const closeQuietly = ctx => {
+    try {
+      const result = ctx && ctx.close();
+      if (result && typeof result.catch === 'function') result.catch(() => {});
+    } catch (_) {}
+  };
+  const later = (fn, ms) => (typeof d.setTimeout === 'function' ? d.setTimeout(fn, ms) : null);
+  const cancelLater = handle => { if (handle !== null && typeof d.clearTimeout === 'function') d.clearTimeout(handle); };
+
+  function newStats() {
+    return {
+      frames: 0, red: 0, black: 0, poses: 0, transitions: 0,
+      firstWall: null, lastWall: null, error: '',
+      minDelta: null, maxDelta: null, zeroDeltas: 0,
+      pausedFrames: 0, pauses: 0, watchdogMutes: 0,
+      lastWasLit: null, stopReason: '', endReason: ''
+    };
+  }
+
+  function toneLabel(run) {
+    if (!run.cfg.tones) return 'off';
+    if (run.audioState === 'unavailable' || run.audioState === 'interrupted') return 'unavailable this run';
+    if (!run.tonesEnabled) return 'muted';
+    return `on, ${Math.round(run.volume * 100)}% volume`;
+  }
+
+  function describeRun(run) {
+    const cfg = run.cfg;
+    const base = cfg.mode === 'journey'
+      ? `Frequency Odyssey · ${Math.round(cfg.totalMs / 60000)} minutes`
+      : cfg.mode === 'slow'
+        ? '1 Hz red / black test'
+        : cfg.mode === 'solid'
+          ? 'solid red diagnostic'
+          : `${cfg.frequency.toFixed(1)} Hz Pure Ganzflicker · ${cfg.pureTimed ? `${Math.round(cfg.minutes)} minutes` : 'continuous'}`;
+    return `${base}. Stereo tones: ${toneLabel(run)}. Multicolor flashes: ${cfg.multicolor ? 'on' : 'off'}.`;
+  }
+
+  function activeStatus(run) {
+    status('main', 'active',
+      `${describeRun(run)} Active${run.requestedRate ? ` at ${run.requestedRate} Hz` : ''}. Pinch anywhere or use the Digital Crown to stop immediately.`);
+  }
+
+  /* Audio teardown. graceful: fade out, then release after the fade (natural end only). */
+  function teardownAudio(run, graceful) {
+    if (run.watchdog !== null) {
+      if (typeof d.clearInterval === 'function') d.clearInterval(run.watchdog);
+      run.watchdog = null;
+    }
+    cancelLater(run.audioTimer);
+    run.audioTimer = null;
+    const ctx = run.audioCtx;
+    const audio = run.audio;
+    run.audioCtx = null;
+    run.audio = null;
+    if (ctx) ctx.onstatechange = null;
+    if (audio && ctx && graceful && typeof d.setTimeout === 'function') {
+      audio.fadeOut();
+      const item = { audio, ctx, timer: null };
+      item.timer = later(() => finishLinger(item), FADE_OUT_S * 1000 + 50);
+      lingering.add(item);
+    } else {
+      if (audio) audio.destroy();
+      if (ctx) closeQuietly(ctx);
+    }
+    if (run.audioState === 'starting' || run.audioState === 'running') run.audioState = 'stopped';
+  }
+
+  function finishLinger(item) {
+    if (!lingering.has(item)) return;
+    lingering.delete(item);
+    cancelLater(item.timer);
+    item.audio.destroy();
+    closeQuietly(item.ctx);
+  }
+
+  function flushLingering() {
+    Array.from(lingering).forEach(finishLinger);
+  }
+
+  function audioUnavailable(run, reason, kind) {
+    teardownAudio(run, false);
+    run.audioState = kind || 'unavailable';
+    status('audio', 'error',
+      `Stereo tones are unavailable for this run (${reason}). The visual session continues. Stop and relaunch to try again.`);
+    if (state === 'running') activeStatus(run);
+  }
+
+  function startWatchdog(run) {
+    if (typeof d.setInterval !== 'function') return;
+    run.watchdog = d.setInterval(() => {
+      if (!run.audio || run.tornDown) return;
+      const stale = run.lastFrameAt === null || now() - run.lastFrameAt > WATCHDOG_STALE_MS;
+      if (stale && run.audio.isAudible()) {
+        run.audio.mute();
+        run.stats.watchdogMutes += 1;
+      }
+    }, WATCHDOG_INTERVAL_MS);
+  }
+
+  /* Must be called synchronously from the user's launch gesture. */
+  function startAudio(run) {
+    let ctx;
+    try {
+      ctx = d.createAudioContext();
+      if (!ctx) throw new Error('no AudioContext');
+    } catch (error) {
+      audioUnavailable(run, `could not create audio: ${errorText(error)}`);
+      return;
+    }
+    run.audioCtx = ctx;
+    run.audioState = 'starting';
+    status('audio', 'info', 'Stereo tones starting.');
+    ctx.onstatechange = () => {
+      if (run.audioCtx !== ctx || run.tornDown) return;
+      const st = ctx.state;
+      if (st === 'interrupted' || st === 'closed' || (st === 'suspended' && run.audioState === 'running')) {
+        audioUnavailable(run, `audio was ${st}`, 'interrupted');
+      }
+    };
+    let settled = false;
+    run.audioTimer = later(() => {
+      if (settled) return;
+      settled = true;
+      run.audioTimer = null;
+      if (isCurrent(run) && run.audioCtx === ctx) audioUnavailable(run, 'audio did not start within 1.5 s');
+    }, AUDIO_START_TIMEOUT_MS);
+    let pending;
+    try {
+      pending = Promise.resolve(ctx.resume());
+    } catch (error) {
+      settled = true;
+      cancelLater(run.audioTimer);
+      run.audioTimer = null;
+      audioUnavailable(run, `resume failed: ${errorText(error)}`);
+      return;
+    }
+    pending.then(() => {
+      if (settled) return;
+      settled = true;
+      cancelLater(run.audioTimer);
+      run.audioTimer = null;
+      if (!isCurrent(run) || run.audioCtx !== ctx) return;
+      if (ctx.state !== 'running') {
+        audioUnavailable(run, `audio state is ${ctx.state}`);
+        return;
+      }
+      try {
+        run.audio = createAudio(ctx, { volume: run.volume });
+        run.audio.start();
+      } catch (error) {
+        audioUnavailable(run, `audio graph failed: ${errorText(error)}`);
+        return;
+      }
+      run.audioState = 'running';
+      startWatchdog(run);
+      status('audio', 'info', `Stereo tones ready. Carrier ${CARRIER_HZ} Hz, gain ceiling ${MAX_GAIN}.`);
+    }, error => {
+      if (settled) return;
+      settled = true;
+      cancelLater(run.audioTimer);
+      run.audioTimer = null;
+      if (isCurrent(run) && run.audioCtx === ctx) audioUnavailable(run, `resume was refused: ${errorText(error)}`);
+    });
+  }
+
+  function teardownRun(run, options) {
+    if (run.tornDown) return;
+    const graceful = !!(options && options.graceful);
+    run.tornDown = true;
+    run.cancelled = true;
+    run.black = true;
+    const session = run.session;
+    if (session && !run.sessionEnded) endQuietly(session);
+    teardownAudio(run, graceful);
+    run.refSpace = null;
+    if (current === run) {
+      current = null;
+      setState('idle');
+    }
+  }
+
+  function failRun(run, text) {
+    run.stats.error = text;
+    status('main', 'error', text);
+    teardownRun(run, { graceful: false });
+  }
+
+  function start(mode, rawConfig) {
+    if (state !== 'idle' || current) return false;
+    flushLingering();
+    const cfg = normalizeConfig(Object.assign({}, rawConfig || {}, { mode }));
+    runId += 1;
+    const run = {
+      id: runId,
+      mode: cfg.mode,
+      cfg,
+      engine: createEngine(cfg, { random }),
+      cancelled: false,
+      tornDown: false,
+      black: false,
+      session: null,
+      sessionEnded: false,
+      gl: null,
+      refSpace: null,
+      requestedRate: null,
+      lastXRTime: null,
+      launchWall: now(),
+      stats: newStats(),
+      xrVisible: true,
+      pauseOnStart: false,
+      ending: false,
+      endedNaturally: false,
+      audio: null,
+      audioCtx: null,
+      audioState: cfg.tones ? 'starting' : 'off',
+      audioTimer: null,
+      watchdog: null,
+      lastFrameAt: null,
+      badge: null,
+      tonesEnabled: cfg.tones,
+      volume: cfg.volume,
+      lastEval: null
+    };
+    current = run;
+    lastRun = run;
+    setState('starting');
+    if (!cfg.tones) status('audio', 'info', 'Stereo tones are off for this run.');
+    if (cfg.tones) startAudio(run);
+    setupXR(run);
+    return true;
+  }
+
+  async function setupXR(run) {
+    let session = null;
+    try {
+      if (!d.xr || typeof d.xr.requestSession !== 'function') throw new Error('WebXR is not available');
+      session = await d.xr.requestSession('immersive-vr');
+    } catch (error) {
+      if (isCurrent(run)) failRun(run, `Immersive start failed: ${errorText(error)}`);
+      return;
+    }
+    if (!isCurrent(run)) {
+      run.staleSessionEnded = true;
+      endQuietly(session);
+      return;
+    }
+    run.session = session;
+    /* r2 correction 4: adopt the session's current XR visibility now, before any
+       further await. A session that is already hidden or visible-blurred owes us
+       no later visibilitychange event, so the run must begin paused and silent. */
+    const initialVis = session.visibilityState;
+    run.xrVisible = initialVis === undefined || initialVis === 'visible';
+    if (!run.xrVisible) run.pauseOnStart = true;
+    try {
+      session.addEventListener('end', () => onSessionEnd(run), { once: true });
+      const stopNow = () => { if (isCurrent(run)) stop('headset select'); };
+      session.addEventListener('selectstart', stopNow);
+      session.addEventListener('select', stopNow);
+      session.addEventListener('visibilitychange', () => {
+        if (!isCurrent(run)) return;
+        const vis = session.visibilityState;
+        run.xrVisible = vis === undefined || vis === 'visible';
+        if (!run.xrVisible) pause(`headset view ${vis}`);
+      });
+
+      const gl = d.createWebGLContext ? d.createWebGLContext() : null;
+      if (!gl) throw new Error('Safari could not create the working-style WebGL context.');
+      run.gl = gl;
+      session.updateRenderState({ baseLayer: d.createLayer(session, gl) });
+      const refSpace = await session.requestReferenceSpace('local');
+      if (!isCurrent(run)) return;
+      run.refSpace = refSpace;
+
+      if (session.updateTargetFrameRate && session.supportedFrameRates) {
+        const rates = Array.from(session.supportedFrameRates).map(Number);
+        run.requestedRate = PREFERRED_FRAME_RATES
+          .find(target => rates.some(rate => Math.abs(rate - target) < 0.1)) || null;
+        if (run.requestedRate) {
+          try {
+            await session.updateTargetFrameRate(run.requestedRate);
+          } catch (_) {
+            run.requestedRate = null;
+          }
+          if (!isCurrent(run)) return;
+        }
+      }
+
+      if (run.pauseOnStart || !run.xrVisible) {
+        setState('paused');
+        run.stats.pauses += 1;
+        status('main', 'paused', 'Paused before the first frame because the headset view was hidden or a pause was requested. Press RESUME on this page to continue, or STOP.');
+      } else {
+        setState('running');
+        activeStatus(run);
+      }
+      session.requestAnimationFrame((time, frame) => onFrame(run, time, frame));
+    } catch (error) {
+      if (isCurrent(run)) failRun(run, `Immersive start failed: ${errorText(error)}`);
+    }
+  }
+
+  function onSessionEnd(run) {
+    run.sessionEnded = true;
+    if (run.tornDown) return;
+    run.stats.endReason = run.endedNaturally ? 'program end' : 'session ended by system';
+    teardownRun(run, { graceful: run.endedNaturally });
+    status('main', 'ready', `Immersive WebXR is ready. ${run.stats.frames} frames were submitted in the last run.`);
+  }
+
+  function frameDelta(run, time) {
+    const fallback = 1000 / (run.requestedRate || 90);
+    let dt = run.lastXRTime === null ? fallback : time - run.lastXRTime;
+    run.lastXRTime = time;
+    if (!Number.isFinite(dt) || dt <= 0 || dt > 250) {
+      run.stats.zeroDeltas += 1;
+      dt = fallback;
+    }
+    const st = run.stats;
+    st.minDelta = st.minDelta === null ? dt : Math.min(st.minDelta, dt);
+    st.maxDelta = st.maxDelta === null ? dt : Math.max(st.maxDelta, dt);
+    return dt;
+  }
+
+  function drawBadge(run, gl, layer, views) {
+    if (!views || !layer || typeof layer.getViewport !== 'function') return;
+    if (!run.badge) {
+      const image = typeof d.createBadgeImage === 'function' ? d.createBadgeImage(BADGE_TEXT) : null;
+      run.badge = createBadgeRenderer(gl, image);
+      if (run.badge.error) run.stats.error = run.badge.error;
+    }
+    for (const view of views) {
+      const viewport = layer.getViewport(view);
+      if (!viewport) continue;
+      const rect = badgeRect(viewport);
+      gl.viewport(rect.x, rect.y, rect.width, rect.height);
+      gl.enable(gl.SCISSOR_TEST);
+      gl.scissor(rect.x, rect.y, rect.width, rect.height);
+      gl.clearColor(BADGE_COLOR[0], BADGE_COLOR[1], BADGE_COLOR[2], 1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      if (run.badge.textReady) {
+        try {
+          run.badge.drawText();
+        } catch (error) {
+          run.stats.error = `badge text: ${errorText(error)}`;
+          run.badge = createBadgeRenderer(gl, null);
+        }
+      }
+    }
+    gl.disable(gl.SCISSOR_TEST);
+  }
+
+  function renderField(gl, layer, rgb) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, layer.framebuffer);
+    gl.disable(gl.SCISSOR_TEST);
+    gl.clearColor(rgb[0], rgb[1], rgb[2], 1);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  }
+
+  function renderBlackStraggler(run, frame) {
+    try {
+      const layer = frame && frame.session && frame.session.renderState && frame.session.renderState.baseLayer;
+      if (run.gl && layer) renderField(run.gl, layer, [0, 0, 0]);
+    } catch (_) {}
+  }
+
+  function onFrame(run, time, frame) {
+    if (!isCurrent(run) || run.black) {
+      renderBlackStraggler(run, frame);
+      return;
+    }
+    const session = frame.session || run.session;
+    session.requestAnimationFrame((t, f) => onFrame(run, t, f));
+    const stats = run.stats;
+    const wall = now();
+    if (stats.firstWall === null) stats.firstWall = wall;
+    stats.lastWall = wall;
+
+    let pose = null;
+    try {
+      pose = frame.getViewerPose(run.refSpace);
+    } catch (error) {
+      stats.error = `pose: ${errorText(error)}`;
+    }
+    if (!pose) return;
+
+    stats.poses += 1;
+    run.lastFrameAt = wall;
+    const gl = run.gl;
+    const layer = session.renderState.baseLayer;
+
+    let ev = null;
+    let rgb = [0, 0, 0];
+    if (state === 'running' && !run.ending) {
+      const dt = frameDelta(run, time);
+      ev = run.engine.step(dt);
+      run.lastEval = ev;
+      rgb = ev.rgb;
+    } else if (state === 'paused') {
+      stats.pausedFrames += 1;
+    }
+
+    renderField(gl, layer, rgb);
+    drawBadge(run, gl, layer, pose.views);
+
+    if (ev) {
+      stats.frames += 1;
+      const lit = ev.level > 0.02 && (ev.on || ev.solid);
+      if (lit) stats.red += 1;
+      else stats.black += 1;
+      if (stats.lastWasLit !== null && lit !== stats.lastWasLit) stats.transitions += 1;
+      stats.lastWasLit = lit;
+      if (stats.frames < 5 || stats.frames % 300 === 0) {
+        const error = gl.getError();
+        if (error !== gl.NO_ERROR) stats.error = `0x${error.toString(16)}`;
+      }
+    }
+
+    if (run.audio) {
+      const audible = !!ev && run.tonesEnabled && state === 'running' && !run.ending &&
+        run.xrVisible && !ev.ended && ev.programmedHz !== null;
+      run.audio.update(ev ? ev.programmedHz : null, audible);
+    }
+
+    if (ev && ev.ended && !run.ending) {
+      run.ending = true;
+      run.endedNaturally = true;
+      if (run.audio) run.audio.fadeOut();
+      endQuietly(session);
+    }
+  }
+
+  function stop(reason) {
+    flushLingering();
+    const run = current;
+    if (!run || state === 'idle') return false;
+    run.black = true;
+    if (run.audio) run.audio.mute();
+    run.cancelled = true;
+    run.stats.stopReason = reason || 'stop';
+    setState('stopping');
+    teardownRun(run, { graceful: false });
+    status('main', 'ready', `Stopped (${run.stats.stopReason}). Immersive WebXR is ready. ${run.stats.frames} frames were submitted in the last run.`);
+    return true;
+  }
+
+  /* r2 correction 3: explicit reset, never a restart. Reuses stop() for all
+     cleanup (pending XR and audio continuations fail isCurrent, the session is
+     ended, audio is muted and closed), releases any lingering fade, then forgets
+     the last run so elapsed time, pulse phase and stats read as empty. Settings
+     live in the page controls and are not touched. Stays idle. */
+  function reset(reason) {
+    if (state === 'stopping') return false;
+    if (current) stop(reason || 'reset');
+    flushLingering();
+    lastRun = null;
+    status('main', 'ready', 'Reset. Elapsed time, pulse phase and last-run statistics are cleared. Your settings are kept. Nothing restarts until you press a launch button.');
+    return true;
+  }
+
+  /* Callers: XRSession visibilitychange (core, above) and the page PAUSE
+     button (disabled while starting). Web page visibility deliberately
+     does not call this (QA correction 1), so pauseOnStart can only be set by
+     an XR visibility event or an explicit user pause. */
+  function pause(reason) {
+    const run = current;
+    if (!run || run.cancelled) return false;
+    if (state === 'starting') {
+      run.pauseOnStart = true;
+      return true;
+    }
+    if (state !== 'running') return false;
+    setState('paused');
+    run.stats.pauses += 1;
+    run.lastXRTime = null;
+    if (run.audio) run.audio.fadeOut();
+    status('main', 'paused', `Paused (${reason || 'pause'}). Flashing and tones are off. Press RESUME on this page to continue, or STOP.`);
+    return true;
+  }
+
+  function resume() {
+    const run = current;
+    if (!run || run.cancelled || state !== 'paused' || run.ending) return false;
+    if (!run.xrVisible) {
+      status('main', 'paused', 'Still paused: the headset view is hidden. Return to the headset view, then press RESUME.');
+      return false;
+    }
+    run.lastXRTime = null;
+    setState('running');
+    activeStatus(run);
+    return true;
+  }
+
+  function setTonesEnabled(enabled) {
+    const run = current;
+    if (!run || run.cancelled) return false;
+    run.tonesEnabled = !!enabled;
+    if (!run.tonesEnabled && run.audio) run.audio.fadeOut();
+    if (run.tonesEnabled && !run.cfg.tones) {
+      status('audio', 'info', 'Stereo tones take effect at the next launch.');
+    }
+    if (state === 'running') activeStatus(run);
+    return true;
+  }
+
+  function setVolume(volume) {
+    const run = current;
+    if (!run || run.cancelled) return false;
+    run.volume = clamp(num(volume, run.volume), 0, 1);
+    if (run.audio) run.audio.setVolume(run.volume);
+    return true;
+  }
+
+  function getSnapshot() {
+    const run = current || lastRun;
+    if (!run) return { state, runId, mode: null, stats: null, engine: null, lingeringAudio: lingering.size };
+    return {
+      state,
+      runId,
+      mode: run.mode,
+      config: run.cfg,
+      stats: Object.assign({}, run.stats),
+      engine: run.engine.getState(),
+      requestedRate: run.requestedRate,
+      launchWall: run.launchWall,
+      audioState: run.audioState,
+      audio: run.audio ? run.audio.info() : null,
+      tones: run.cfg.tones,
+      tonesEnabled: run.tonesEnabled,
+      multicolor: run.cfg.multicolor,
+      paused: state === 'paused',
+      lastEval: run.lastEval,
+      badgeText: run.badge ? run.badge.textReady : null,
+      lingeringAudio: lingering.size
+    };
+  }
+
+  return {
+    start,
+    stop,
+    reset,
+    pause,
+    resume,
+    setTonesEnabled,
+    setVolume,
+    flushLingering,
+    getSnapshot,
+    get state() { return state; }
+  };
+}
+
+root.GanzflickerCore = Object.freeze({
+  VERSION,
+  CARRIER_HZ,
+  MAX_GAIN,
+  DEFAULT_VOLUME,
+  FADE_IN_S,
+  FADE_OUT_S,
+  FREQ_TIME_CONSTANT_S,
+  WATCHDOG_INTERVAL_MS,
+  WATCHDOG_STALE_MS,
+  AUDIO_START_TIMEOUT_MS,
+  MIN_HUE_DELTA_DEG,
+  PREFERRED_FRAME_RATES,
+  BADGE_COLOR,
+  BADGE_TEXT,
+  BADGE_IMAGE_WIDTH,
+  BADGE_IMAGE_HEIGHT,
+  MIN_MINUTES,
+  MAX_MINUTES,
+  JOURNEY,
+  clamp,
+  lerp,
+  smooth,
+  compileJourney,
+  breatheMultiplier,
+  srgbToLinear,
+  linearToSrgb,
+  relativeLuminance,
+  hueToLinearRgb,
+  luminanceCappedColor,
+  colorForFlash,
+  hueDistance,
+  nextHue,
+  normalizeConfig,
+  END_LABELS,
+  endBehaviorLabel,
+  createEngine,
+  gainForVolume,
+  createAudio,
+  badgeRect,
+  createBadgeRenderer,
+  createRunController
+});
+})(globalThis);
+</script>
+
+<script>
+/* Ganzflicker Journey XR v13 page glue. Maker: Chen A-004.
+   Reads the DOM, builds a config, and calls GanzflickerCore with the real
+   navigator.xr, AudioContext, performance.now and Math.random. */
+(() => {
+'use strict';
+
+const Core = globalThis.GanzflickerCore;
+const $ = id => document.getElementById(id);
+const clamp = Core.clamp;
+
+const ui = {
+  status: $('status'),
+  ack: $('ack'),
+  duration: $('duration'),
+  durationOut: $('durationOut'),
+  endBehavior: $('endBehavior'),
+  journeyScale: $('journeyScale'),
+  journeyScaleOut: $('journeyScaleOut'),
+  frequency: $('frequency'),
+  frequencyOut: $('frequencyOut'),
+  intensity: $('intensity'),
+  intensityOut: $('intensityOut'),
+  duty: $('duty'),
+  dutyOut: $('dutyOut'),
+  pureLength: $('pureLength'),
+  tones: $('tones'),
+  volume: $('volume'),
+  volumeOut: $('volumeOut'),
+  audioStatus: $('audioStatus'),
+  multicolor: $('multicolor'),
+  brightness: $('brightness'),
+  brightnessOut: $('brightnessOut'),
+  floor: $('floor'),
+  floorOut: $('floorOut'),
+  journeyPanel: $('journeyPanel'),
+  purePanel: $('purePanel'),
+  mapPanel: $('mapPanel'),
+  timeline: $('timeline'),
+  phaseList: $('phaseList'),
+  enter: $('enter'),
+  pureLaunch: $('pureLaunch'),
+  slowTest: $('slowTest'),
+  solidTest: $('solidTest'),
+  pause: $('pause'),
+  resume: $('resume'),
+  exit: $('exit'),
+  reset: $('reset'),
+  diagnostics: $('diagnostics'),
+  dockTitle: $('dockTitle'),
+  dockDetail: $('dockDetail'),
+  dockLaunch: $('dockLaunch'),
+  dockStop: $('dockStop')
+};
+
+const launchButtons = [ui.enter, ui.pureLaunch, ui.slowTest, ui.solidTest, ui.dockLaunch];
+let selectedExperience = 'journey';
+let xrSupported = false;
+let runState = 'idle';
+
+function setStatus(kind, text) {
+  ui.status.dataset.kind = kind;
+  ui.status.textContent = text;
+}
+
+function formatDuration(seconds) {
+  const rounded = Math.max(0, Math.round(seconds));
+  const hours = Math.floor(rounded / 3600);
+  const minutes = Math.floor((rounded % 3600) / 60);
+  const secs = rounded % 60;
+  if (hours) return `${hours}h ${minutes ? `${minutes}m` : ''}`.trim();
+  if (minutes) return `${minutes}m ${secs ? `${secs}s` : ''}`.trim();
+  return `${secs}s`;
+}
+
+function renderJourneyMap() {
+  const minutes = clamp(Number(ui.duration.value) || 45, 5, 480);
+  ui.duration.value = String(minutes);
+  ui.durationOut.textContent = `${minutes} min`;
+  ui.journeyScaleOut.textContent = `${ui.journeyScale.value}%`;
+  const phases = Core.compileJourney(minutes * 60000);
+
+  ui.timeline.innerHTML = '';
+  ui.phaseList.innerHTML = '';
+
+  phases.forEach(phase => {
+    const segment = document.createElement('div');
+    segment.className = 'segment';
+    segment.style.flex = String(phase.weight);
+    segment.textContent = phase.weight >= 0.1 ? phase.name : '';
+    segment.title = `${phase.name}: ${formatDuration(phase.durationMs / 1000)}`;
+    ui.timeline.appendChild(segment);
+
+    const row = document.createElement('div');
+    row.className = 'phase-row';
+    const settings = phase.mode === 'solid'
+      ? `steady red · ${Math.round(phase.intensityA * 100)}→${Math.round(phase.intensityB * 100)}%`
+      : `${phase.hzA}→${phase.hzB} Hz · ${Math.round(phase.intensityA * 100)}→${Math.round(phase.intensityB * 100)}% red · ${Math.round(phase.dutyA * 100)}→${Math.round(phase.dutyB * 100)}% duty`;
+    row.innerHTML = `
+      <div class="phase-name">${phase.name}</div>
+      <div class="phase-time">${formatDuration(phase.durationMs / 1000)}</div>
+      <div class="phase-detail">${settings}<br>${phase.detail}</div>
+    `;
+    ui.phaseList.appendChild(row);
+  });
+}
+
+function effectsText() {
+  const tones = ui.tones.checked ? `tones on ${ui.volume.value}%` : 'tones off';
+  const color = ui.multicolor.checked ? 'multicolor on' : 'multicolor off';
+  return `${tones} · ${color}`;
+}
+
+function updateLabels() {
+  ui.frequencyOut.textContent = `${Number(ui.frequency.value).toFixed(1)} Hz`;
+  ui.intensityOut.textContent = `${ui.intensity.value}%`;
+  ui.dutyOut.textContent = `${ui.duty.value}%`;
+  ui.volumeOut.textContent = `${ui.volume.value}%`;
+  ui.brightnessOut.textContent = `${ui.brightness.value}%`;
+  ui.floorOut.textContent = `${ui.floor.value}%`;
+  renderJourneyMap();
+}
+
+function selectExperience(value) {
+  selectedExperience = value;
+  document.querySelectorAll('[data-mode]').forEach(card => {
+    card.classList.toggle('selected', card.dataset.mode === value);
+    const radio = card.querySelector('input');
+    if (radio) radio.checked = card.dataset.mode === value;
+  });
+  ui.journeyPanel.hidden = value !== 'journey';
+  ui.mapPanel.hidden = value !== 'journey';
+  ui.purePanel.hidden = value !== 'pure';
+  Array.from(ui.endBehavior.options || []).forEach(option => {
+    option.textContent = Core.endBehaviorLabel(value, option.value);
+  });
+  ui.enter.textContent = value === 'journey'
+    ? 'ENTER FREQUENCY ODYSSEY'
+    : `ENTER PURE ${Number(ui.frequency.value).toFixed(1)} HZ`;
+  ui.pureLaunch.textContent = `ENTER PURE ${Number(ui.frequency.value).toFixed(1)} HZ`;
+  ui.dockTitle.textContent = value === 'journey'
+    ? 'Frequency Odyssey'
+    : `Pure Ganzflicker · ${Number(ui.frequency.value).toFixed(1)} Hz`;
+  const pureLength = ui.pureLength.value === 'timed' ? `${ui.duration.value} minutes` : 'continuous';
+  ui.dockDetail.textContent = value === 'journey'
+    ? `${ui.duration.value} minutes · evolving frequency, intensity, and duty cycle · ${effectsText()}`
+    : `${ui.intensity.value}% intensity · ${ui.duty.value}% red duty · ${pureLength} · ${effectsText()}`;
+  ui.dockLaunch.textContent = value === 'journey'
+    ? 'ENTER JOURNEY'
+    : 'ENTER PURE GF';
+}
+
+function updateButtons() {
+  const canLaunch = xrSupported && ui.ack.checked && runState === 'idle';
+  launchButtons.forEach(button => { button.disabled = !canLaunch; });
+  const active = runState === 'starting' || runState === 'running' || runState === 'paused';
+  ui.exit.disabled = !active;
+  ui.dockStop.disabled = !active;
+  ui.pause.disabled = runState !== 'running';
+  ui.resume.disabled = runState !== 'paused';
+  ui.reset.disabled = !active && !controller.getSnapshot().stats;
+}
+
+function resetRun() {
+  controller.reset('page RESET button');
+  ui.diagnostics.textContent = 'Reset. No immersive run yet.';
+  updateButtons();
+}
+
+function showStats(prefix = 'Last run') {
+  const snap = controller.getSnapshot();
+  if (!snap.stats) return;
+  const stats = snap.stats;
+  const engine = snap.engine;
+  const phaseLine = engine.phaseNames.length
+    ? `phases reached: ${engine.phaseNames.join(' → ')}\n`
+    : '';
+  ui.diagnostics.textContent =
+`${prefix}
+mode: ${snap.mode}
+state: ${snap.state}
+frames: ${stats.frames}
+red/lit frames: ${stats.red}
+black frames: ${stats.black}
+red/black transitions: ${stats.transitions}
+phase changes: ${engine.phaseChanges}
+${phaseLine}completed journey loops: ${engine.completedLoops}
+pose frames: ${stats.poses}
+paused frames: ${stats.pausedFrames}
+pause count: ${stats.pauses}
+requested frame rate: ${snap.requestedRate || 'default'}
+first frame delay: ${stats.firstWall === null ? 'n/a' : Math.round(stats.firstWall - snap.launchWall) + ' ms'}
+XR delta range: ${stats.minDelta === null ? 'n/a' : stats.minDelta.toFixed(3) + '-' + stats.maxDelta.toFixed(3) + ' ms'}
+zero/invalid XR deltas: ${stats.zeroDeltas}
+audio state: ${snap.audioState}${snap.tones ? ` (watchdog mutes: ${stats.watchdogMutes})` : ''}
+multicolor: ${snap.multicolor ? 'on' : 'off'}
+stop reason: ${stats.stopReason || stats.endReason || 'n/a'}
+last WebGL error: ${stats.error || 'none'}`;
+}
+
+function createBadgeImage(text) {
+  const canvas = document.createElement('canvas');
+  canvas.width = Core.BADGE_IMAGE_WIDTH;
+  canvas.height = Core.BADGE_IMAGE_HEIGHT;
+  const g = canvas.getContext('2d');
+  if (!g) return null;
+  g.fillStyle = 'rgb(15,15,15)';
+  g.fillRect(0, 0, canvas.width, canvas.height);
+  g.fillStyle = 'rgb(200,200,200)';
+  g.font = '700 40px -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif';
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.fillText(text, canvas.width / 2, canvas.height / 2, canvas.width - 32);
+  return canvas;
+}
+
+const controller = Core.createRunController({
+  xr: navigator.xr,
+  createAudioContext: () => {
+    const AudioCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtor) throw new Error('WebAudio is not available');
+    return new AudioCtor();
+  },
+  now: () => performance.now(),
+  random: Math.random,
+  setInterval: (fn, ms) => window.setInterval(fn, ms),
+  clearInterval: handle => window.clearInterval(handle),
+  setTimeout: (fn, ms) => window.setTimeout(fn, ms),
+  clearTimeout: handle => window.clearTimeout(handle),
+  createWebGLContext: () => document.createElement('canvas').getContext('webgl', { xrCompatible: true, alpha: false }),
+  createLayer: (session, gl) => new XRWebGLLayer(session, gl),
+  createBadgeImage,
+  onStatus: (channel, kind, text) => {
+    if (channel === 'audio') {
+      ui.audioStatus.textContent = text;
+      ui.audioStatus.dataset.kind = kind;
+    } else {
+      setStatus(kind, text);
+    }
+  },
+  onState: state => {
+    runState = state;
+    updateButtons();
+    if (state === 'starting') ui.diagnostics.textContent = 'Immersive session starting…';
+    if (state === 'idle') showStats();
+  }
+});
+
+function snapshotConfig(mode) {
+  return {
+    minutes: clamp(Number(ui.duration.value) || 45, 5, 480),
+    scale: clamp(Number(ui.journeyScale.value) / 100, 0.3, 1),
+    endBehavior: ui.endBehavior.value,
+    frequency: Math.max(0.1, Number(ui.frequency.value) || 7.5),
+    intensity: clamp(Number(ui.intensity.value) / 100, 0.1, 1),
+    duty: clamp(Number(ui.duty.value) / 100, 0.01, 0.99),
+    pureTimed: mode === 'pure' && ui.pureLength.value === 'timed',
+    multicolor: ui.multicolor.checked,
+    brightness: clamp(Number(ui.brightness.value) / 100, 0.1, 1),
+    floor: clamp(Number(ui.floor.value) / 100, 0, 0.3),
+    tones: ui.tones.checked,
+    volume: clamp(Number(ui.volume.value) / 100, 0, 1)
+  };
+}
+
+/* Synchronous user-gesture handler: the AudioContext is created and resumed
+   inside controller.start before any await. */
+function launch(mode) {
+  if (!xrSupported || !ui.ack.checked || runState !== 'idle') return;
+  controller.start(mode, snapshotConfig(mode));
+}
+
+async function init() {
+  updateButtons();
+  if (!navigator.xr?.isSessionSupported) {
+    setStatus('error', 'WebXR is not exposed by this Safari configuration.');
+    return;
+  }
+  try {
+    const supported = await navigator.xr.isSessionSupported('immersive-vr');
+    if (!supported) {
+      setStatus('error', 'Safari reports that immersive-vr is unavailable.');
+      return;
+    }
+    xrSupported = true;
+    setStatus('ready', 'Immersive WebXR is ready. V13 preserves the working V11 and V12 frame-delta engine. Read and acknowledge the photosensitivity warning to enable launch.');
+    updateButtons();
+  } catch (error) {
+    setStatus('error', `WebXR detection failed: ${error?.message || error}`);
+  }
+}
+
+document.querySelectorAll('input[name="experience"]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    if (radio.checked) selectExperience(radio.value);
+  });
+});
+
+document.querySelectorAll('[data-minutes]').forEach(button => {
+  button.addEventListener('click', () => {
+    ui.duration.value = button.dataset.minutes;
+    renderJourneyMap();
+    selectExperience(selectedExperience);
+  });
+});
+
+ui.duration.addEventListener('input', () => {
+  renderJourneyMap();
+  selectExperience(selectedExperience);
+});
+ui.endBehavior.addEventListener('change', renderJourneyMap);
+ui.journeyScale.addEventListener('input', renderJourneyMap);
+[ui.frequency, ui.intensity, ui.duty, ui.brightness, ui.floor].forEach(control => {
+  control.addEventListener('input', () => {
+    updateLabels();
+    selectExperience(selectedExperience);
+  });
+});
+ui.pureLength.addEventListener('change', () => selectExperience(selectedExperience));
+ui.multicolor.addEventListener('change', () => selectExperience(selectedExperience));
+ui.tones.addEventListener('change', () => {
+  if (runState === 'idle') ui.audioStatus.textContent = ui.tones.checked ? 'Stereo tones will start with the next launch.' : 'Stereo tones are off.';
+  else controller.setTonesEnabled(ui.tones.checked);
+  selectExperience(selectedExperience);
+});
+ui.volume.addEventListener('input', () => {
+  updateLabels();
+  controller.setVolume(Number(ui.volume.value) / 100);
+  selectExperience(selectedExperience);
+});
+ui.ack.addEventListener('change', updateButtons);
+
+ui.enter.addEventListener('click', () => launch(selectedExperience === 'journey' ? 'journey' : 'pure'));
+ui.pureLaunch.addEventListener('click', () => launch('pure'));
+ui.slowTest.addEventListener('click', () => launch('slow'));
+ui.solidTest.addEventListener('click', () => launch('solid'));
+ui.dockLaunch.addEventListener('click', () => launch(selectedExperience === 'journey' ? 'journey' : 'pure'));
+ui.exit.addEventListener('click', () => controller.stop('page STOP button'));
+ui.dockStop.addEventListener('click', () => controller.stop('page STOP button'));
+ui.pause.addEventListener('click', () => controller.pause('page PAUSE button'));
+ui.resume.addEventListener('click', () => controller.resume());
+ui.reset.addEventListener('click', resetRun);
+
+/* QA correction 1: no page (document) visibility listener on purpose.
+   On visionOS Safari, entering an immersive-vr Full Space may itself hide the
+   page document; pausing on that would start every run paused and black, with
+   RESUME on a page button the user cannot reach in the headset. While a session
+   is requested or active, the authoritative background signal is the XRSession
+   visibilityState, handled in the core (hidden or visible-blurred -> pause,
+   explicit RESUME only). pagehide still stops and tears everything down. */
+window.addEventListener('pagehide', () => controller.stop('page closed'));
+
+updateLabels();
+selectExperience('journey');
+init();
+
+})();
+</script>
+</body>
+</html>
